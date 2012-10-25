@@ -1,5 +1,5 @@
 #lang racket/base
-
+;Produces JSON from string input (support)
 (require racket/system racket/list)
 (require (planet dherman/json:4:0))
 

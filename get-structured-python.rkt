@@ -10,6 +10,10 @@ Python parses as a JSON structure that we export from Python's ast
 module.  You should use this file to turn it into a plai-typed data
 structure that you define in python-syntax.rkt
 
+Takes input from parse-python file (JSON) and produces PyExpr (defined in python-syntax) aka AST
+
+Need to expand to include other surface syntax not yet defined in python-syntax
+
 |#
 
 (define (get-structured-python pyjson)

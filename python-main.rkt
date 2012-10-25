@@ -15,10 +15,11 @@
 
 (define (run-python port)
   (interp
-    (python-lib
-      (desugar
-        (get-structured-python
-          (parse-python/port port python-path))))))
+    (python-lib;kind of like library functions that are defined in the env from the start. 
+               ;not syntax but not worth desugaring.
+      (desugar;takes in PyExpr, i.e. surface syntax and produces core python
+        (get-structured-python;takes in JSON, produces a PyExpr (represents user input)
+          (parse-python/port port python-path))))));takes in cmdline input and returns JSON structure
 
 (define python-path "/home/joe/bin/python")
 
