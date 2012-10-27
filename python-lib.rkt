@@ -20,10 +20,10 @@ that calls the primitive `print`.
 
 (define assert-true-lambda
   (CFunc (list 'check-true)
-    (CIf (CId 'check-true) (CTrue) (CError (CStr "Assert failed")))))
+    (CIf (CId 'check-true) (CBool 1) (CError (CStr "Assert failed")))))
 
 (define true-val
-  (CTrue))
+  (CBool 1))
 
 (define-type LibBinding
   [bind (left : symbol) (right : CExp)])

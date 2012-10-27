@@ -18,7 +18,7 @@ primitives here.
   (type-case CVal arg
     [VNum (n) (to-string n)]
     [VStr (s) s]
-    [VTrue () "true"]
+    [VBool (n) (if (= n 1) "True" "False")]
     [VClosure (env args body) (error 'prim "Can't print closures yet")]))
   
 

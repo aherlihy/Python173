@@ -17,6 +17,7 @@ Need to expand to include other surface syntax not yet defined in python-syntax
 |#
 
 (define (get-structured-python pyjson)
+  ;(write pyjson)
   (match pyjson
     [(hash-table ('nodetype "Module") ('body expr-list))
      (PySeq (map get-structured-python expr-list))]
@@ -33,9 +34,18 @@ Need to expand to include other surface syntax not yet defined in python-syntax
     [(hash-table ('nodetype "Name")
                  ('ctx _)        ;; ignoring ctx for now
                  ('id id))
-     (PyId (string->symbol id))]
+     (cond
+       [(equal? id "True") (PyBool 1)]
+       [(equal? id "False") (PyBool 0)]
+       [else  (PyId (string->symbol id))])]
     [(hash-table ('nodetype "Num")
                  ('n n))
      (PyNum n)]
-    [_ (error 'parse "Haven't handled a case yet")]))
+    [(hash-table ('nodetype "If")
+                 ('test i)  
+                 ('orelse e)
+                 ('body t))
+     (PyIf (get-structured-python i) (get-structured-python t) (get-structured-python e))]
+    [_ (display pyjson) (error 'parse "Haven't handled a case yet")]))
+    ;;[_ (error 'parse "Haven't handled a case yet")]))
 

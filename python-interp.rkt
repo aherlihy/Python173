@@ -7,13 +7,20 @@
   (type-case CExp expr
     [CNum (n) (VNum n)]
     [CStr (s) (VStr s)]
-    [CTrue () (VTrue)]
-
+    [CBool (n) (VBool n)]
     [CError (e) (error 'interp (to-string (interp-env e env)))]
 
     [CIf (i t e) (type-case CVal (interp-env i env)
-      [VTrue () (interp-env t env)]
-      [else (interp-env e env)])]
+      [VBool (n) (if (= n 1)
+                     (interp-env t env)
+                     (interp-env e env))]
+      [VNum (n) (if (not (or (= n 0) (= n .0)))
+                     (interp-env t env)
+                     (interp-env e env))]
+      [VStr (n) (if (not (equal? n ""))
+                     (interp-env t env)
+                     (interp-env e env))]             
+      [else (interp-env t env)])]
 
     [CId (x) (type-case (optionof CVal) (hash-ref env x)
       [some (v) v]

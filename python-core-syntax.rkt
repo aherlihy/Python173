@@ -10,7 +10,7 @@ ParselTongue.
 (define-type CExp
   [CNum (n : number)]
   [CStr (s : string)]
-  [CTrue]
+  [CBool (n : number)]
   [CSeq (e1 : CExp) (e2 : CExp)]
   [CError (e1 : CExp)]
   [CIf (test : CExp) (then : CExp) (else : CExp)]
@@ -23,7 +23,7 @@ ParselTongue.
 (define-type CVal
   [VNum (n : number)]
   [VStr (s : string)]
-  [VTrue]
+  [VBool (n : number)]
   [VClosure (env : Env) (args : (listof symbol)) (body : CExp)])
 
 (define-type-alias Env (hashof symbol CVal))

@@ -4,5 +4,7 @@
   [PySeq (es : (listof PyExpr))]
   [PyNum (n : number)]
   [PyId (x : symbol)]
-  [PyApp (fun : PyExpr) (args : (listof PyExpr))])
+  [PyApp (fun : PyExpr) (args : (listof PyExpr))]
+  [PyBool (n : number)]
+  [PyIf (i : PyExpr) (t : PyExpr) (e : PyExpr)])
 
