@@ -18,12 +18,14 @@ primitives here.
   (type-case CVal arg
     [VNum (n) (to-string n)]
     [VStr (s) s]
+    [VPass () "Pass"]
     [VBool (n) (if (= n 1) "True" "False")]
+    [VNone () "None"]
     [VClosure (env args body) (error 'prim "Can't print closures yet")]))
   
 
 (define (print arg)
-  (display (pretty arg)))
+  (display (string-append (pretty arg) "\n")))
 
 (define (python-prim1 op arg)
   (case op

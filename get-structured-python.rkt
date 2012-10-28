@@ -31,21 +31,44 @@ Need to expand to include other surface syntax not yet defined in python-syntax
                  ('func func-expr))
      (PyApp (get-structured-python func-expr)
             (map get-structured-python args-list))]
+    [(hash-table ('nodetype "Pass"))
+     (PyPass)]
     [(hash-table ('nodetype "Name")
                  ('ctx _)        ;; ignoring ctx for now
                  ('id id))
      (cond
        [(equal? id "True") (PyBool 1)]
        [(equal? id "False") (PyBool 0)]
+       [(equal? id "None") (PyNone)]
        [else  (PyId (string->symbol id))])]
     [(hash-table ('nodetype "Num")
                  ('n n))
      (PyNum n)]
     [(hash-table ('nodetype "If")
-                 ('test i)  
-                 ('orelse e)
-                 ('body t))
+                 ('test i)
+                 ('body t)
+                 ('orelse e))
      (PyIf (get-structured-python i) (get-structured-python t) (get-structured-python e))]
+    [(hash-table ('nodetype "Str")
+                 ('s s))
+     (PyStr s)]
+    [(hash-table ('nodetype "UnaryOp")
+                 ('operand opand)
+                 ('op op))
+     (match op 
+       [(hash-table (nodetype "Not"))
+        (PyUnOp (get-structured-python opand) "Not")]
+      [_ (display pyjson) (error 'parse "Haven't handled a case yet for UnaryOp")])]
+    [(hash-table ('nodetype "BoolOp")
+                 ('values v)
+                 ('op op))
+     (match op
+       [(hash-table ('nodetype "And"))
+        (PyBinOp (map get-structured-python v) "And")]
+       [(hash-table ('nodetype "Or"))
+        (PyBinOp (map get-structured-python v) "Or")]
+       [_ (error 'parse "Haven't handled a case yet in BinOp")])] 
+    [list (PySeq (map get-structured-python pyjson))]
     [_ (display pyjson) (error 'parse "Haven't handled a case yet")]))
     ;;[_ (error 'parse "Haven't handled a case yet")]))
 

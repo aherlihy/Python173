@@ -18,13 +18,18 @@ ParselTongue.
   [CLet (x : symbol) (bind : CExp) (body : CExp)]
   [CApp (fun : CExp) (args : (listof CExp))]
   [CFunc (args : (listof symbol)) (body : CExp)]
-  [CPrim1 (prim : symbol) (arg : CExp)])
+  [CPrim1 (prim : symbol) (arg : CExp)]
+  [CPass]
+  [CNone]
+  )
 
 (define-type CVal
   [VNum (n : number)]
   [VStr (s : string)]
   [VBool (n : number)]
-  [VClosure (env : Env) (args : (listof symbol)) (body : CExp)])
-
+  [VPass]
+  [VClosure (env : Env) (args : (listof symbol)) (body : CExp)]
+  [VNone]
+  )
 (define-type-alias Env (hashof symbol CVal))
 

@@ -17,9 +17,10 @@
       [VNum (n) (if (not (or (= n 0) (= n .0)))
                      (interp-env t env)
                      (interp-env e env))]
-      [VStr (n) (if (not (equal? n ""))
-                     (interp-env t env)
-                     (interp-env e env))]             
+      [VStr (n) (if (string=? n "")
+                     (interp-env e env)
+                     (interp-env t env))] 
+      [VNone () (interp-env e env)]
       [else (interp-env t env)])]
 
     [CId (x) (type-case (optionof CVal) (hash-ref env x)
@@ -41,7 +42,10 @@
 
     [CFunc (args body) (VClosure env args body)] 
 
-    [CPrim1 (prim arg) (python-prim1 prim (interp-env arg env))]))
+    [CPrim1 (prim arg) (python-prim1 prim (interp-env arg env))]
+    [CPass () (VPass)]
+    [CNone () (VNone)]
+    ))
 
 (define (bind-args args vals env)
   (cond [(and (empty? args) (empty? vals)) env]
