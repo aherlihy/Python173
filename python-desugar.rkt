@@ -14,7 +14,6 @@
     [PyStr (s) (CStr s)]
     [PyPass () (CPass)]
     [PyNone () (CNone)]
-    [PyExcep (l) (CPass)]
     [PyRaise (l) (CPass)]
     [PyUnOp (opand op) (CIf (desugar opand) (CBool 0) (CBool 1))]
     [PyBinOp (vals op) (let ((f (desugar (first vals))))

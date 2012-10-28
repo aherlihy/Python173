@@ -57,10 +57,10 @@ Need to expand to include other surface syntax not yet defined in python-syntax
     [(hash-table ('nodetype "UnaryOp")
                  ('operand opand)
                  ('op op))
-     (match op 
-       [(hash-table (nodetype "Not"))
-        (PyUnOp (get-structured-python opand) "Not")]
-      [_ (display pyjson) (error 'parse "Haven't handled a case yet for UnaryOp")])]
+            (match op 
+                [(hash-table (nodetype "Not"))
+                   (PyUnOp (get-structured-python opand) "Not")]
+                [_ (display pyjson) (error 'parse "Haven't handled a case yet for UnaryOp")])]
     
     [(hash-table ('nodetype "BoolOp")
                  ('values v)
@@ -71,17 +71,13 @@ Need to expand to include other surface syntax not yet defined in python-syntax
        [(hash-table ('nodetype "Or"))
         (PyBinOp (map get-structured-python v) "Or")]
        [_ (error 'parse "Haven't handled a case yet in BinOp")])] 
-    ; add case for 'raise'
+    
+    
     [(hash-table ('nodetype "Raise")
                  ('cause c) ;ignore
                  ('exc exc))
              (PyRaise (get-structured-python exc))]
-    [(hash-table ('nodetype "Call")
-                 ('starargs starargs) ;; ignoring starargs for now
-                 ('args args-list)
-                 ('func func-expr)
-                 ('id id)) ;; we think is always "Exception"
-             (PyExcep (map get-structured-python args-list))]
+
     [list (PySeq (map get-structured-python pyjson))]
     [_ (display pyjson) (error 'parse "Haven't handled a case yet")]))
     ;;[_ (error 'parse "Haven't handled a case yet")]))

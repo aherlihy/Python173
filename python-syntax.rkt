@@ -12,7 +12,6 @@
   [PyBinOp (v : (listof PyExpr)) (op : string)]
   [PyPass]
   [PyNone]
-  [PyExcep (l : PyExpr)]
-  [PyRaise (l : (listof PyExpr))]
+  [PyRaise (l : PyExpr)]
   )
 
