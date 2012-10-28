@@ -1,1 +1,4 @@
-print(not 1)
+try:
+    raise Exception('foo!')
+except:
+    print("accepted")
