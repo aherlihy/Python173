@@ -21,6 +21,9 @@ ParselTongue.
   [CPrim1 (prim : symbol) (arg : CExp)]
   [CPass]
   [CNone]
+  [CDict (k : (listof CExp)) (v : (listof CExp))]
+  [CComp (op : CExp) (l : CExp) (comp : CExp)]
+  [COp (op : string)]
   )
 
 (define-type CVal
@@ -30,6 +33,7 @@ ParselTongue.
   [VPass]
   [VClosure (env : Env) (args : (listof symbol)) (body : CExp)]
   [VNone]
+  [VDict (k : (listof CVal)) (v : (listof CVal))]
   ;eventually add vexcpt
   )
 (define-type-alias Env (hashof symbol CVal))

@@ -70,14 +70,34 @@ Need to expand to include other surface syntax not yet defined in python-syntax
         (PyBinOp (map get-structured-python v) "And")]
        [(hash-table ('nodetype "Or"))
         (PyBinOp (map get-structured-python v) "Or")]
-       [_ (error 'parse "Haven't handled a case yet in BinOp")])] 
-    
-    
+       [_ (error 'parse "Haven't handled a case yet in BinOp")])]       
     [(hash-table ('nodetype "Raise")
                  ('cause c) ;ignore
                  ('exc exc))
              (PyRaise (get-structured-python exc))]
-
+    [(hash-table ('nodetype "Dict")
+                 ('keys k) 
+                 ('values v))
+             (PyDict (map get-structured-python k) (map get-structured-python v))]
+    [(hash-table ('nodetype "Compare")
+                 ('ops ops) 
+                 ('comparators c)
+                 ('left l))
+             (PyComp (map get-structured-python ops) (map get-structured-python c) (get-structured-python l))]
+    [(hash-table ('nodetype "Lt"))
+     (PyOp "<")]
+    [(hash-table ('nodetype "LtE"))
+     (PyOp "<=")]
+    [(hash-table ('nodetype "Eq"))
+     (PyOp "=")]
+    [(hash-table ('nodetype "GtE"))
+     (PyOp ">=")]
+    [(hash-table ('nodetype "Gt"))
+     (PyOp ">")]
+    [(hash-table ('nodetype "NotEq"))
+     (PyOp "!=")]
+    [(hash-table ('nodetype "Is"))
+     (PyOp "=")]
     [list (PySeq (map get-structured-python pyjson))]
     [_ (display pyjson) (error 'parse "Haven't handled a case yet")]))
     ;;[_ (error 'parse "Haven't handled a case yet")]))

@@ -27,5 +27,12 @@
                                  f
                                  (desugar (PyBinOp (rest vals) op))))
                              f))]
+    [PyDict (k v) (CDict (map desugar k) (map desugar v))]
+    [PyComp (ops comps l) (if (= 1 (length comps)) 
+                              (CComp (desugar (first ops)) (desugar l) (desugar (first comps)))
+                              (CIf (CComp (desugar (first ops)) (desugar l) (desugar (first comps)))
+                                   (desugar (PyComp (rest ops) (rest comps) (first comps)))
+                                   (CBool 0)))]
+    [PyOp (op) (COp op)]
             ))
 
