@@ -21,6 +21,7 @@ primitives here.
     [VPass () "Pass"]
     [VBool (n) (if (= n 1) "True" "False")]
     [VNone () "None"]
+    [VDict (k v) "Dictionary"]
     [VClosure (env args body) (error 'prim "Can't print closures yet")]))
   
 

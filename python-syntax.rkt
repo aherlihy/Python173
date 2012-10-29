@@ -14,5 +14,8 @@
   [PyPass]
   [PyNone]
   [PyRaise (l : PyExpr)]
+  [PyDict (k : (listof PyExpr)) (v : (listof PyExpr))]
+  [PyComp (ops : (listof PyExpr)) (comps : (listof PyExpr)) (left : PyExpr)]
+  [PyOp (op : string)]
   )
 

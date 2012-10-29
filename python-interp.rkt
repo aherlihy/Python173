@@ -2,6 +2,10 @@
 
 (require "python-core-syntax.rkt"
          "python-primitives.rkt")
+(require (typed-in racket [string>? : (string string -> boolean)]))
+(require (typed-in racket [string<? : (string string -> boolean)]))
+(require (typed-in racket [string>=? : (string string -> boolean)]))
+(require (typed-in racket [string<=? : (string string -> boolean)]))
 
 (define (mult-helper current str n)
   (if (zero? n) current (mult-helper (string-append current str) str (- n 1)))
@@ -47,8 +51,98 @@
     [CFunc (args body) (VClosure env args body)] 
 
     [CPrim1 (prim arg) (python-prim1 prim (interp-env arg env))]
+    [CDict (k v) (VDict (map interp k) (map interp v))]
     [CPass () (VPass)]
     [CNone () (VNone)]
+    [CComp (op l r) (type-case CExp op
+                      [COp (o)
+                      (cond
+                        [(string=? o "=") (type-case CVal (interp-env l env)
+                                         [VBool (n) (type-case CVal (interp-env r env)
+                                                      [VBool (m)  (if (= n m) (VBool 1) (VBool 0))]
+                                                      [VNum (m)  (if (= n m) (VBool 1) (VBool 0))]
+                                                      [else (VBool 0)])]
+                                         [VNum (n) (type-case CVal (interp-env r env)
+                                                     [VBool (m)  (if (= n m) (VBool 1) (VBool 0))]
+                                                     [VNum (m)  (if (= n m) (VBool 1) (VBool 0))]
+                                                     [else (VBool 0)])]
+                                         [VStr (n) (type-case CVal (interp-env r env)
+                                                     [VStr (m)  (if (string=? n m) (VBool 1) (VBool 0))]
+                                                     [else (VBool 0)])] 
+                                         [VNone () (type-case CVal (interp-env r env)
+                                                     [VNone ()  (VBool 1)]
+                                                     [else (VBool 0)])]
+                                         [else (VBool 0)])]
+                        [(string=? o "!=") (type-case CVal (interp-env l env)
+                                         [VBool (n) (type-case CVal (interp-env r env)
+                                                      [VBool (m)  (if (= n m) (VBool 0) (VBool 1))]
+                                                      [VNum (m)  (if (= n m) (VBool 0) (VBool 1))]
+                                                      [else (VBool 1)])]
+                                         [VNum (n) (type-case CVal (interp-env r env)
+                                                     [VBool (m)  (if (= n m) (VBool 0) (VBool 1))]
+                                                     [VNum (m)  (if (= n m) (VBool 0) (VBool 1))]
+                                                     [else (VBool 1)])]
+                                         [VStr (n) (type-case CVal (interp-env r env)
+                                                     [VStr (m)  (if (string=? n m) (VBool 0) (VBool 1))]
+                                                     [else (VBool 1)])] 
+                                         [VNone () (type-case CVal (interp-env r env)
+                                                     [VNone ()  (VBool 0)]
+                                                     [else (VBool 1)])]
+                                         [else (VBool 0)])]
+                        [(string=? o ">") (type-case CVal (interp-env l env)
+                                         [VBool (n) (type-case CVal (interp-env r env)
+                                                      [VBool (m)  (if (> n m) (VBool 1) (VBool 0))]
+                                                      [VNum (m)  (if (> n m) (VBool 1) (VBool 0))]
+                                                      [else (error 'interp "Incompatible arguments for comparator")])]
+                                         [VNum (n) (type-case CVal (interp-env r env)
+                                                     [VBool (m)  (if (> n m) (VBool 1) (VBool 0))]
+                                                     [VNum (m)  (if (> n m) (VBool 1) (VBool 0))]
+                                                     [else (error 'interp "Incompatible arguments for comparator")])]
+                                         [VStr (n) (type-case CVal (interp-env r env)
+                                                     [VStr (m)  (if (string>? n m) (VBool 1) (VBool 0))]
+                                                     [else (error 'interp "Incompatible arguments for comparator")])] 
+                                         [else (error 'interp "Incompatible arguments for comparator")])]
+                        [(string=? o "<") (type-case CVal (interp-env l env)
+                                         [VBool (n) (type-case CVal (interp-env r env)
+                                                      [VBool (m)  (if (< n m) (VBool 1) (VBool 0))]
+                                                      [VNum (m)  (if (< n m) (VBool 1) (VBool 0))]
+                                                      [else (error 'interp "Incompatible arguments for comparator")])]
+                                         [VNum (n) (type-case CVal (interp-env r env)
+                                                     [VBool (m)  (if (< n m) (VBool 1) (VBool 0))]
+                                                     [VNum (m)  (if (< n m) (VBool 1) (VBool 0))]
+                                                     [else (error 'interp "Incompatible arguments for comparator")])]
+                                         [VStr (n) (type-case CVal (interp-env r env)
+                                                     [VStr (m)  (if (string<? n m) (VBool 1) (VBool 0))]
+                                                     [else (error 'interp "Incompatible arguments for comparator")])] 
+                                         [else (error 'interp "Incompatible arguments for comparator")])]
+                     [(string=? o ">=") (type-case CVal (interp-env l env)
+                                         [VBool (n) (type-case CVal (interp-env r env)
+                                                      [VBool (m)  (if (>= n m) (VBool 1) (VBool 0))]
+                                                      [VNum (m)  (if (>= n m) (VBool 1) (VBool 0))]
+                                                      [else (error 'interp "Incompatible arguments for comparator")])]
+                                         [VNum (n) (type-case CVal (interp-env r env)
+                                                     [VBool (m)  (if (>= n m) (VBool 1) (VBool 0))]
+                                                     [VNum (m)  (if (>= n m) (VBool 1) (VBool 0))]
+                                                     [else (error 'interp "Incompatible arguments for comparator")])]
+                                         [VStr (n) (type-case CVal (interp-env r env)
+                                                     [VStr (m)  (if (string>=? n m) (VBool 1) (VBool 0))]
+                                                     [else (error 'interp "Incompatible arguments for comparator")])] 
+                                         [else (error 'interp "Incompatible arguments for comparator")])]
+                        [(string=? o "<=") (type-case CVal (interp-env l env)
+                                         [VBool (n) (type-case CVal (interp-env r env)
+                                                      [VBool (m)  (if (<= n m) (VBool 1) (VBool 0))]
+                                                      [VNum (m)  (if (<= n m) (VBool 1) (VBool 0))]
+                                                      [else (error 'interp "Incompatible arguments for comparator")])]
+                                         [VNum (n) (type-case CVal (interp-env r env)
+                                                     [VBool (m)  (if (<= n m) (VBool 1) (VBool 0))]
+                                                     [VNum (m)  (if (<= n m) (VBool 1) (VBool 0))]
+                                                     [else (error 'interp "Incompatible arguments for comparator")])]
+                                         [VStr (n) (type-case CVal (interp-env r env)
+                                                     [VStr (m)  (if (string<=? n m) (VBool 1) (VBool 0))]
+                                                     [else (error 'interp "Incompatible arguments for comparator")])] 
+                                         [else (error 'interp "Incompatible arguments for comparator")])])]
+                      [else (error 'interp "CComp requires COp")])]
+    [COp (o) (error 'interp "COp should not be outside CComp")]
     [CBinOp (l r op) 
                       (let ([lval (interp-env l env)]);bind lval
                         (let ([rval (interp-env r env)]);bind rval
