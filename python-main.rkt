@@ -1,5 +1,6 @@
 #lang racket/base
 
+(require (planet dherman/json:4:0))
 (require racket/cmdline
          racket/pretty
          "parse-python.rkt"
@@ -15,13 +16,10 @@
 
 (define (run-python port)
   (interp
-    (python-lib;kind of like library functions that are defined in the env from the start. 
-               ;not syntax but not worth desugaring.
-      (desugar;takes in PyExpr, i.e. surface syntax and produces core python
-  ;;(display
-        (get-structured-python;takes in JSON, produces a PyExpr (represents user input)
-  ;;(display
-          (parse-python/port port python-path))))));takes in cmdline input and returns JSON structure
+    (python-lib
+      (desugar
+        (get-structured-python
+          (parse-python/port port python-path))))))
 
 (define python-path "/home/joe/bin/python")
 
@@ -47,4 +45,9 @@
   ("--python-path" path "Set the python path"
    (set! python-path path))
 
+  ("--progress-report" dirname "Generate a soft report"
+   (printf "~a\n"
+    (jsexpr->json
+     (json-summary
+      (run-tests (mk-proc-eval/silent python-test-runner) dirname)))))
 )
