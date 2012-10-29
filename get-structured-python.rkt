@@ -65,39 +65,30 @@ Need to expand to include other surface syntax not yet defined in python-syntax
     [(hash-table ('nodetype "BoolOp")
                  ('values v)
                  ('op op))
-     (match op
-       [(hash-table ('nodetype "And"))
-        (PyBinOp (map get-structured-python v) "And")]
-       [(hash-table ('nodetype "Or"))
-        (PyBinOp (map get-structured-python v) "Or")]
-       [_ (error 'parse "Haven't handled a case yet in BinOp")])]       
+              (match op
+                     [(hash-table ('nodetype "And"))
+                             (PyBoolOp (map get-structured-python v) "And")]
+                     [(hash-table ('nodetype "Or"))
+                             (PyBoolOp (map get-structured-python v) "Or")]
+                     [_ (error 'parse "Haven't handled a case yet in BoolOp")])] 
+    
+    [(hash-table ('nodetype "BinOp")
+                 ('op op)
+                 ('right r)
+                 ('left l))
+           (match op
+                 [(hash-table ('nodetype "Add"))
+                         (PyBinOp (get-structured-python r) (get-structured-python l) "Add")]
+                 [(hash-table ('nodetype "Mult"))
+                         (PyBinOp (get-structured-python r) (get-structured-python l) "Mult")]
+                 [_ (error 'parse "Haven't handled a case yet in BinOp")]
+             )]
+           
     [(hash-table ('nodetype "Raise")
                  ('cause c) ;ignore
                  ('exc exc))
              (PyRaise (get-structured-python exc))]
-    [(hash-table ('nodetype "Dict")
-                 ('keys k) 
-                 ('values v))
-             (PyDict (map get-structured-python k) (map get-structured-python v))]
-    [(hash-table ('nodetype "Compare")
-                 ('ops ops) 
-                 ('comparators c)
-                 ('left l))
-             (PyComp (map get-structured-python ops) (map get-structured-python c) (get-structured-python l))]
-    [(hash-table ('nodetype "Lt"))
-     (PyOp "<")]
-    [(hash-table ('nodetype "LtE"))
-     (PyOp "<=")]
-    [(hash-table ('nodetype "Eq"))
-     (PyOp "=")]
-    [(hash-table ('nodetype "GtE"))
-     (PyOp ">=")]
-    [(hash-table ('nodetype "Gt"))
-     (PyOp ">")]
-    [(hash-table ('nodetype "NotEq"))
-     (PyOp "!=")]
-    [(hash-table ('nodetype "Is"))
-     (PyOp "=")]
+
     [list (PySeq (map get-structured-python pyjson))]
     [_ (display pyjson) (error 'parse "Haven't handled a case yet")]))
     ;;[_ (error 'parse "Haven't handled a case yet")]))

@@ -22,10 +22,6 @@ that calls the primitive `print`.
   (CFunc (list 'check-true)
     (CIf (CId 'check-true) (CBool 1) (CError (CStr "Assert failed")))))
 
-#|(define assert-equal-lambda
-  (CFunc (list 'check-true)
-    (CIf (CId 'check-true) (CBool 1) (CError (CStr "Assert failed")))))|#
-
 (define true-val;need to also define false-val?
   (CBool 1))
 

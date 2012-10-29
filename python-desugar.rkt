@@ -16,23 +16,18 @@
     [PyNone () (CNone)]
     [PyRaise (l) (CPass)]
     [PyUnOp (opand op) (CIf (desugar opand) (CBool 0) (CBool 1))]
-    [PyBinOp (vals op) (let ((f (desugar (first vals))))
+    [PyBoolOp (vals op) (let ((f (desugar (first vals))))
                          (if (> (length vals) 1)
                         (if (equal? "And" op) 
                             (CIf f
-                                 (desugar (PyBinOp (rest vals) op))
+                                 (desugar (PyBoolOp (rest vals) op))
                                  f
                                  )
                             (CIf f
                                  f
-                                 (desugar (PyBinOp (rest vals) op))))
-                             f))]
-    [PyDict (k v) (CDict (map desugar k) (map desugar v))]
-    [PyComp (ops comps l) (if (= 1 (length comps)) 
-                              (CComp (desugar (first ops)) (desugar l) (desugar (first comps)))
-                              (CIf (CComp (desugar (first ops)) (desugar l) (desugar (first comps)))
-                                   (desugar (PyComp (rest ops) (rest comps) (first comps)))
-                                   (CBool 0)))]
-    [PyOp (op) (COp op)]
-            ))
+                                 (desugar (PyBoolOp (rest vals) op))))
+                             f))
+    ]
+    [PyBinOp (r l op) (CBinOp (desugar l) (desugar r) op)]
+   ))
 
