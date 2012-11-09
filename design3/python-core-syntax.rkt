@@ -35,7 +35,7 @@
   [VFalse]
   [VNum (n : number)]
   [VStr (s : string)]
-  [VBox (v : Location)]
+  [VBox (v : Location)];just number
   [VObj (dict : CVal) (class : CVal)]
   [VPrimMap (m : (hashof CVal CVal))]
   [VTuple (l : (listof CVal))]

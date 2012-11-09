@@ -62,8 +62,8 @@
 ;;if predicate is present, define-primf throws an error unless the
 ;;predicate returns true when applied to its associated arg
 (define-syntax define-primf
-  (syntax-rules ()
-    [(define-primf (name . args) body)
+  (syntax-rules () ;~basically pattern matching
+    [(define-primf (name . args) body);~ . generates a pair, so primf is given a pair (name+args) and then a body.
      (define (name (arg : (listof CVal))) : (PM CVal)
        (prim-bind arg args body))]))
 

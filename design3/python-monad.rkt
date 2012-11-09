@@ -2,13 +2,13 @@
 
 (require "python-core-syntax.rkt")
 
-(define-type (ROption 'a)
+(define-type (ROption 'a);;~what are the 'a/'b/'c types? are they defined anywhere or are they just generics
   [RValue (value : 'a)]
-  [RReturn (value : CVal)]
+  [RReturn (value : CVal)];;why have multiple return values?
   [RError (value : CVal)])
 
 (define-type-alias (PM 'b)
-  (Store -> (Store * (ROption 'b))))
+  (Store -> (Store * (ROption 'b))));what is *
 
 (define (m-bind (m : (PM 'c)) (f : ('c -> (PM 'd)))) : (PM 'd)
   (lambda (store)
