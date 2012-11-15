@@ -117,7 +117,7 @@
                 [some (v) (m-return v)]
                 [none () (interp-error
                           (string-append "key not found: "
-                                         (to-string key)))])]
+                                         (to-string key)))])];why would be passed __add__
     [else (interp-error
            (string-append "prim-dict-lookup wants a dict: "
                           (to-string key)))]))
@@ -253,6 +253,7 @@
 
 ;;numeric addition
 (define-primf (add left right)
+  
   (m-return (VNum
              (+ (VNum-n left)
                 (VNum-n right)))))
@@ -266,6 +267,27 @@
 ;;numeric negation
 (define-primf (neg arg)
   (m-return (VNum (- 0 (VNum-n arg)))))
+
+;;numeric division(11/14)
+(define-primf (div left right)
+  (if (zero? (VNum-n right))
+         (interp-error "divide by 0 error")
+         (m-return (VNum 
+                    (/ (VNum-n left)
+                       (VNum-n right))))))
+
+;;numeric multiplication(11/14)
+(define-primf (mult left right)
+  (m-return (VNum
+             (* (VNum-n left)
+                (VNum-n right)))))
+;string addition
+(define-primf (str-add left right)
+  (m-return right))
+  
+;string mult
+(define-primf (str-mult left right)
+  (m-return right))
 
 ;;gets a value from a box
 (define-primf (get-box (box VBox?))
@@ -298,6 +320,10 @@
     [(int-add) add]
     [(int-sub) sub]
     [(int-neg) neg]
+    [(int-mult) mult];(11/4)
+    [(int-div) div];(11/4)
+    [(str-add) str-add];(11/4)
+    [(str-mult) str-mult];(11/4)
     [(get-box) get-box]
     [(set-box) set-box]
     [(class-has-member?) class-has-member?]

@@ -29,7 +29,7 @@ that calls the primitive `print`.
               (CError (CStr "assertion failed")))))
 
 (define partial-apply
-  (CAddGlobal
+  (CAddGlobal;create global scope
    'partial-apply
    (CFunc (list 'func)
           (some 'args)
@@ -88,11 +88,28 @@ that calls the primitive `print`.
                          (CPrimF 'int-add))
                  (values "__sub__"
                          (CPrimF 'int-sub))
+                 (values "__mult__"
+                         (CPrimF 'int-mult))
+                 (values "__div__"
+                         (CPrimF 'int-div))
                  (values "__neg__"
                          (CPrimF 'int-neg))))
 
 (make-type str-type
-           (list))
+           (list (values "__bool__"
+                         (CFunc (list 'this)
+                                (none)
+                                (CIf (CApp (CPrimF 'equal)
+                                           (list (CId 'this)
+                                                 (CStr ""))
+                                           (CTuple empty))
+                                     (CReturn (CFalse))
+                                     (CReturn (CTrue)))))
+                 (values "__add__"
+                         (CPrimF 'str-add))
+
+                 (values "__mult__"
+                         (CPrimF 'str-mult))))
 
 (make-type func-type
            (list))
@@ -125,7 +142,7 @@ that calls the primitive `print`.
                  (values "__add__"
                          (CPrimF 'tuple-append))))
 
-(define lib-binds
+(define lib-binds;put all default vals/keywords
   (list
    (values 'print (CPrimF 'print))
    (values 'True (CTrue))
@@ -146,6 +163,7 @@ that calls the primitive `print`.
    none-type
    func-type))
 
+;ASK TA
 (define (python-lib expr)
   (foldr (lambda (pair expr)
            (local [(define-values (name value) pair)]
@@ -153,5 +171,23 @@ that calls the primitive `print`.
                         expr)))
          (foldr CSeq
                 expr
-                lib-exprs)
+                lib-exprs);add all the lib func to a CSeq + return
          lib-binds))
+#|
+(foldr CSeq (CApp (CPrimF 'int-add) (list (CNum 1) (CNum 1)) (CNone)) lib-exprs)
+
+
+
+ (foldr CSeq (CApp (CPrimF 'int-add) (list (CNum 1) (CNum 1)) (CNone) lib-exprs)
+
+->
+
+(CSeq partial-apply (CSeq none-type (CSeq func-type CSeq
+
+->
+
+
+|#
+
+
+

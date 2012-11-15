@@ -112,6 +112,9 @@ structure that you define in python-syntax.rkt
                  ('elts elts))
      (PyTuple
       (map get-structured-python elts))]
+    [(hash-table ('nodetype "Str")
+                 ('s s))
+     (PyStr s)]
     [(hash-table ('nodetype "Pass"))
      (PyPass)]
     [_ (error 'parse (string-append "Haven't handled a case yet:\n"

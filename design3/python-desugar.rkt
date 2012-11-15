@@ -52,12 +52,15 @@
                      (desugar-inner e)))]             ;~return CIf(app, desugar(t), desugar(e))
     [PyOp (id args)
           (case id
-            [(Add) (binop "__add__" (first args) (second args))]
+            [(Add) (binop "__add__" (first args) (second args))];(11/4)This is where we want to branch on what kind of args
             [(Sub) (binop "__sub__" (first args) (second args))]
+            [(Mult) (binop "__mult__" (first args) (second args))];(11/4)
+            [(Div) (binop "__div__" (first args) (second args))];(11/4)
             [(USub) (unop "__neg__" (first args))]
             [else (CApp (CPrimF id);~why desugar if not add/sub/etc?
                         (map desugar-inner args)
                         (CTuple empty))])]
+    [PyStr (s) (CStr s)]
     [PyPass () (CNone)]
     ;;[else (error 'desugar (string-append "not implemented: "
     ;;                                     (to-string exp)))]
@@ -73,7 +76,7 @@
                                      ;    name of param is 'name' passed into func (to be applied correctly, corresponding param needs to come from caller)
                                      ;    pass list of 
               (list (desugar-inner inner)
-                    (CStr name)) ;__bool__(test-value)
+                    (CStr name))
               (CTuple empty))
         (map desugar-inner args)
         (desugar-inner vararg)))
