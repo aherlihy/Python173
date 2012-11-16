@@ -31,8 +31,7 @@
 (define-type CVal
   [VUndefined];;initial value for variables
   [VNone]
-  [VTrue]
-  [VFalse]
+  [VBool (n : number)]
   [VNum (n : number)]
   [VStr (s : string)]
   [VBox (v : Location)];just number

@@ -102,6 +102,11 @@ structure that you define in python-syntax.rkt
      (PyOp (string->symbol op)
            (list (get-structured-python left)
                  (get-structured-python right)))]
+    [(hash-table ('nodetype "BoolOp")
+                 ('values v)
+                 ('op (hash-table ('nodetype op))))
+     (PyOp (string->symbol op)
+           (map get-structured-python v))]
     [(hash-table ('nodetype "UnaryOp")
                  ('op (hash-table ('nodetype op)))
                  ('operand operand))

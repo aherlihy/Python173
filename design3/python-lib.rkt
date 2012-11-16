@@ -72,7 +72,20 @@ that calls the primitive `print`.
            (list (values "__bool__"
                          (CFunc (list 'this)
                                 (none)
-                                (CReturn (CId 'this))))))
+                                (CReturn (CId 'this))))
+                 
+                 (values "__add__"
+                         (CPrimF 'int-add))
+                 (values "__sub__"
+                         (CPrimF 'int-sub))
+                 (values "__mult__"
+                         (CPrimF 'int-mult))
+                 (values "__div__"
+                         (CPrimF 'int-div))
+                 (values "__neg__"
+                         (CPrimF 'int-neg))
+                 ))
+
 
 (make-type num-type
            (list (values "__bool__"
@@ -109,7 +122,7 @@ that calls the primitive `print`.
                          (CPrimF 'str-add))
 
                  (values "__mult__"
-                         (CPrimF 'str-mult))))
+                         (CPrimF 'int-mult))));(11/15)now basically everything-mult
 
 (make-type func-type
            (list))

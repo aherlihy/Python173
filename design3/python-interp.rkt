@@ -5,8 +5,8 @@
          "python-lib.rkt"
          (typed-in racket/base
                    [display : (string -> void)]
-                   [andmap : (('a -> boolean) (listof 'a) -> boolean)]))
-
+                   [andmap : (('a -> boolean) (listof 'a) -> boolean)])
+         (typed-in racket/math))
 ;;note: interp and primitives need to be mutually recursive -- primops
 ;;need to lookup and apply underscore members (ie + calls __plus__),
 ;;and applying a function requires m-interp.  Since racket doesn't
@@ -72,8 +72,7 @@
   (type-case CVal obj
     [VUndefined () (interp-error "local used before being set")]
     [VNone () (get-global "none-type")]
-    [VTrue () (get-global "bool-type")]
-    [VFalse () (get-global "bool-type")]
+    [VBool (n) (get-global "bool-type")]
     [VNum (n) (get-global "num-type")]
     [VStr (s) (get-global "str-type")]
     [VBox (v) (interp-error "Boxes don't have a class")]
@@ -132,9 +131,9 @@
 ;;superclasses) contains key
 (define-primf (class-has-member? & args)
   (pm-catch-error (m-do ([(class-lookup args)])
-                        (VTrue))
+                        (VBool 1))
                   (lambda (x)
-                    (m-return (VFalse)))))
+                    (m-return (VBool 0)))))
 
 ;;takes an object in the first position and a key in the second
 ;;position, returns the value that the class has for key. Errors if
@@ -248,42 +247,115 @@
 (define-primf (equal left right)
   (if (equal? left
               right)
-      (m-return (VTrue))
-      (m-return (VFalse))))
+      (m-return (VBool 1))
+      (m-return (VBool 0))))
 
 ;;numeric addition
 (define-primf (add left right)
-  
-  (m-return (VNum
-             (+ (VNum-n left)
-                (VNum-n right)))))
+  (let ((L (type-case 
+              CVal left
+            [VBool (n) n]
+            [VNum (n) n]
+            [else +nan.0]))
+        (R (type-case 
+              CVal right
+            [VBool (n) n]
+            [VNum (n) n]
+            [else +nan.0])))   
+  (if (not (or (equal? +nan.0 L) (equal? +nan.0 R)))
+      (m-return (VNum
+             (+ L R)))
+      (interp-error "unhandled operator for +"))))
 
 ;;numeric subtraction
 (define-primf (sub left right)
-  (m-return (VNum
-             (- (VNum-n left)
-                (VNum-n right)))))
+  (let ((L (type-case 
+              CVal left
+            [VBool (n) n]
+            [VNum (n) n]
+            [else +nan.0]))
+        (R (type-case 
+              CVal right
+            [VBool (n) n]
+            [VNum (n) n]
+            [else +nan.0])))   
+  (if (not (or (equal? +nan.0 L) (equal? +nan.0 R)))
+      (m-return (VNum
+             (- L R)))
+      (interp-error "unhandled operator for -"))))
 
 ;;numeric negation
 (define-primf (neg arg)
-  (m-return (VNum (- 0 (VNum-n arg)))))
+    (let ((L (type-case 
+              CVal arg
+            [VBool (n) n]
+            [VNum (n) n]
+            [else +nan.0])))
+        
+  (if (not (equal? +nan.0 L))
+      (m-return (VNum (- 0 L)))
+      (interp-error "unhandled operator for negate"))))
+  
 
 ;;numeric division(11/14)
 (define-primf (div left right)
-  (if (zero? (VNum-n right))
+    (let ((L (type-case 
+              CVal left
+            [VBool (n) n]
+            [VNum (n) n]
+            [else +nan.0]))
+        (R (type-case 
+              CVal right
+            [VBool (n) n]
+            [VNum (n) n]
+            [else +nan.0])))   
+  (if (not (or (equal? +nan.0 L) (equal? +nan.0 R)))
+  
+      (if (zero? R)
          (interp-error "divide by 0 error")
          (m-return (VNum 
-                    (/ (VNum-n left)
-                       (VNum-n right))))))
+                    (/ L R))))
+      (interp-error "unhandled operator for /"))))
 
 ;;numeric multiplication(11/14)
 (define-primf (mult left right)
-  (m-return (VNum
-             (* (VNum-n left)
-                (VNum-n right)))))
+      (let ((L (type-case 
+              CVal left
+            [VBool (n) n]
+            [VNum (n) n]
+            [else +nan.0]))
+        (R (type-case 
+              CVal right
+            [VBool (n) n]
+            [VNum (n) n]
+            [else +nan.0])))   
+        (if (not (or (equal? +nan.0 L) (equal? +nan.0 R)))
+            (m-return (VNum
+             (* L R)))
+            (type-case CVal left
+              [VStr (s) (if (equal? +nan.0 R)
+                            (interp-error "unhandled operator for string*")
+                            (m-return (VStr (mult-helper "" s R))))]
+              [else (type-case CVal right
+                      [VStr (s) (if (equal? +nan.0 L)
+                            (interp-error "unhandled operator for *string")
+                            (m-return (VStr (mult-helper "" s L))))]
+                      [else (interp-error "unhandled operator for string*")])]))))
+      
+     
+
+(define (mult-helper current str n)
+  (if (zero? n) current (mult-helper (string-append current str) str (- n 1)))
+)
+
 ;string addition
 (define-primf (str-add left right)
-  (m-return right))
+  (type-case
+      CVal right
+    [VStr (r)(m-return (VStr (string-append 
+                      (VStr-s left)
+                      r)))]
+    [else (interp-error "operator not handled for string+other")]))
   
 ;string mult
 (define-primf (str-mult left right)
@@ -394,8 +466,8 @@
   (type-case CExp expr
     [CUndefined () (m-return (VUndefined))]
     [CNone () (m-return (VNone))]
-    [CTrue () (m-return (VTrue))]
-    [CFalse () (m-return (VFalse))]
+    [CTrue () (m-return (VBool 1))]
+    [CFalse () (m-return (VBool 0))]
     [CNum (n) (m-return (VNum n))]
     [CStr (s) (m-return (VStr s))]
     [CBox (v) (m-do ([val (m-interp v env)]
@@ -468,7 +540,7 @@
     [CPrimF (id) (m-return (VPrimF id))]
     [CIf (test t e)
          (m-do ([test-v (m-interp test env)]
-                [(if (equal? test-v (VFalse))
+                [(if (equal? test-v (VBool 0))
                      (m-interp e env)
                      (m-interp t env))]))]
     [CError (val)

@@ -57,6 +57,9 @@
             [(Mult) (binop "__mult__" (first args) (second args))];(11/4)
             [(Div) (binop "__div__" (first args) (second args))];(11/4)
             [(USub) (unop "__neg__" (first args))]
+            [(And) (if (empty? args) (CId 'True) (desugar-inner (PyIf (first args) (PyOp id (rest args)) (first args))))];NOTE need to desugar numbers into booleans for numbers to work
+            ;;[(Or)
+            [(Not) (desugar-inner (PyIf (first args) (PyId 'False) (PyId 'True)))]
             [else (CApp (CPrimF id);~why desugar if not add/sub/etc?
                         (map desugar-inner args)
                         (CTuple empty))])]
