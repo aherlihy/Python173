@@ -7,6 +7,9 @@
                    [display : (string -> void)]
                    [andmap : (('a -> boolean) (listof 'a) -> boolean)])
          (typed-in racket/math))
+(require (typed-in racket [string>? : (string string -> boolean)]))
+(require (typed-in racket [string>=? : (string string -> boolean)]))
+(require (typed-in racket [string->number : (string -> number)]))
 ;;note: interp and primitives need to be mutually recursive -- primops
 ;;need to lookup and apply underscore members (ie + calls __plus__),
 ;;and applying a function requires m-interp.  Since racket doesn't
@@ -361,11 +364,81 @@
 (define-primf (str-mult left right)
   (m-return right))
 
+;str-eq?
+(define-primf (str-eq left right) 
+               (type-case CVal right
+                 [VStr (s) (m-return (if (string=? (VStr-s left) (VStr-s right)) (VBool 1) (VBool 0)))]
+                 [VNone () (m-return (VBool 0))]
+                 [else (interp-error "unsupported operator for str-compare")]))
+
+;string gt
+(define-primf (str-gt left right)
+  (type-case CVal right
+    [VStr (s) (m-return (if (string>? (VStr-s left) s) (VBool 1) (VBool 0)))]
+    [else (interp-error "unsupported operator for str-gt")]))
+
+;string gte
+(define-primf (str-gte left right)
+  (type-case CVal right
+    [VStr (s) (m-return (if (string>=? (VStr-s left) s) (VBool 1) (VBool 0)))]
+    [else (interp-error "unsupported operator for str-gt")]))
+
 ;none eq?
 (define-primf (none-eq left right)
   (m-return (type-case CVal right
                   [VNone () (VBool 1)]
                   [else (VBool 0)])))
+
+;num gt
+(define-primf (int-gt left right)
+        (let ((L (type-case 
+              CVal left
+            [VBool (n) n]
+            [VNum (n) n]
+            [else +nan.0]))
+        (R (type-case 
+              CVal right
+            [VBool (n) n]
+            [VNum (n) n]
+            [else +nan.0])))   
+        (if (not (or (equal? +nan.0 L) (equal? +nan.0 R)))
+            (m-return (if (> L R) (VBool 1) (VBool 0)))
+            (interp-error "unsupported operator for num-compare"))))
+
+;num gte
+(define-primf (int-gte left right)
+        (let ((L (type-case 
+              CVal left
+            [VBool (n) n]
+            [VNum (n) n]
+            [else +nan.0]))
+        (R (type-case 
+              CVal right
+            [VBool (n) n]
+            [VNum (n) n]
+            [else +nan.0])))   
+        (if (not (or (equal? +nan.0 L) (equal? +nan.0 R)))
+            (m-return (if (>= L R) (VBool 1) (VBool 0)))
+            (interp-error "unsupported operator for num-compare"))))
+;num eq
+(define-primf (int-eq left right)
+        (let ((L (type-case 
+              CVal left
+            [VBool (n) n]
+            [VNum (n) n]
+            [VNone () -nan.0]
+            [else +nan.0]))
+        (R (type-case 
+              CVal right
+            [VBool (n) n]
+            [VNum (n) n]
+            [VNone () -nan.0]
+            [else +nan.0])))   
+        (if (or (equal? -nan.0 L) (equal? -nan.0 R))
+            (m-return (VBool 0))
+            (if (not (or (equal? +nan.0 L) (equal? +nan.0 R)))
+                (m-return (if (> L R) (VBool 1) (VBool 0)))
+                (interp-error "unsupported operator for num-compare")))))
 
 ;;gets a value from a box
 (define-primf (get-box (box VBox?))
@@ -390,24 +463,46 @@
 (define-primf (tuple-length (t VTuple?))
   (m-return (VNum (length (VTuple-l t)))))
 
+;int cast
+(define-primf (int val)
+  (type-case CVal val
+    [VNum (n) (m-return (VNum (floor n)))]
+    [VStr (s) (m-return (VNum (floor (string->number s))))];need to deal with invalid string case
+    [VBool (n) (m-return (VNum (floor n)))]
+    [else (interp-error "undefined operand for int")]))
+
+;float cast
+(define-primf (float val)
+  (type-case CVal val
+    [VNum (n) (m-return (VNum (+ 0.0 n)))]
+    [VStr (s) (m-return (VNum (+ 0.0 (string->number s))))];need to deal with invalid string case
+    [VBool (n) (m-return (VNum (+ 0.0 n)))]
+    [else (interp-error "undefined operand for int")]))
+
+;bool cast
+(define-primf (bool val)
+  (m-return (VBool 1)))
 ;;finds the appropriate racket function for a given VPrimF symbol
 (define (python-prim op) : ((listof CVal) -> (PM CVal))
   (case op
     [(print) print]
     [(equal) equal]
+    [(float) float]
+    [(int) int]
+    [(bool) bool]
     [(int-add) add]
     [(int-sub) sub]
     [(int-neg) neg]
     [(int-mult) mult];(11/4)
     [(int-div) div];(11/4)
-    ;[(int-gt) int-gt];(11/16)
-    ;[(int-gte) int-gte];(11/16)
-    ;[(int-eq) int-eq];(11/16)
+    [(int-gt) int-gt];(11/16)
+    [(int-gte) int-gte];(11/16)
+    [(int-eq) int-eq];(11/16)
     [(str-add) str-add];(11/4)
     [(str-mult) str-mult];(11/4)
-    ;[(str-gt) str-gt];(11/16)
-    ;[(str-gte) str-gte];(11/16)
-    ;[(str-eq) str-eq];(11/16)
+    [(str-gt) str-gt];(11/16)
+    [(str-gte) str-gte];(11/16)
+    [(str-eq) str-eq];(11/16)
     [(none-eq) none-eq];(11/16)
     [(get-box) get-box]
     [(set-box) set-box]

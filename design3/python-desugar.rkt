@@ -84,7 +84,6 @@
 ;   takes in (1) Cexp func
 ;            (2) listof Cexp arglist
 ;            (3) listof Cexp varargs 
-;s
 (define (get-and-call inner name args vararg);~what does this do?
   (CApp (CApp (CPrimF 'class-lookup) ;example of instantiating/lookup of an object -> 
                                      ;    type of inner CApp is 'class_lookup', so applies function class lookup

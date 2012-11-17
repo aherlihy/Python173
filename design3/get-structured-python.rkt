@@ -128,9 +128,6 @@ structure that you define in python-syntax.rkt
                  ('comparators c)
                  ('left l))
      (PyComp (map string->symbol (map (lambda (x) (hash-ref 'node-type x))
-                                      ;;(match x 
-                                       ;; [(hash-table ('nodetype op)) x]
-                                       ;; [_ x])) 
                                       ops)) 
              (get-structured-python l) 
              (map get-structured-python c))]

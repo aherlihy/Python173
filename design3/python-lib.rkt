@@ -27,7 +27,16 @@ that calls the primitive `print`.
                     (CTuple empty))
               (CNone)
               (CError (CStr "assertion failed")))))
-
+(define assert-not-equal
+    (CFunc (list 'a 'b)
+         (none)
+         (CIf (CApp (CPrimF 'equal)
+                    (list (CId 'a)
+                          (CId 'b))
+                    (CTuple empty))
+              (CError (CStr "assertion failed"))
+              (CNone))))
+  
 (define partial-apply
   (CAddGlobal;create global scope
    'partial-apply
@@ -190,11 +199,16 @@ that calls the primitive `print`.
    (values 'None (CNone))
    (values '___assertTrue assert-true)
    (values '___assertEqual assert-equal)
+   (values '___assertIs assert-equal);hack for now, fix for later
+   (values '___assertIsNot assert-not-equal);also hack
    (values 'type class-type)
    (values 'bool bool-type)
    (values 'int num-type)
    (values 'string str-type)
    (values 'tuple tuple-type)
+   (values 'bool (CPrimF 'bool))
+   (values 'int (CPrimF 'int))
+   (values 'float (CPrimF 'float))
    (values 'object obj-type)))
 
 (define lib-exprs
