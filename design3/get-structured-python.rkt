@@ -104,8 +104,8 @@ structure that you define in python-syntax.rkt
                  (get-structured-python right)))]
     [(hash-table ('nodetype "BoolOp")
                  ('values v)
-                 ('op (hash-table ('nodetype op))))
-     (PyOp (string->symbol op)
+                 ('op op))
+     (PyOp (map string->symbol op)
            (map get-structured-python v))]
     [(hash-table ('nodetype "UnaryOp")
                  ('op (hash-table ('nodetype op)))
@@ -120,8 +120,21 @@ structure that you define in python-syntax.rkt
     [(hash-table ('nodetype "Str")
                  ('s s))
      (PyStr s)]
+    ;[(hash-table (
     [(hash-table ('nodetype "Pass"))
      (PyPass)]
+    [(hash-table ('nodetype "Compare")
+                 ('ops ops) 
+                 ('comparators c)
+                 ('left l))
+     (PyComp (map string->symbol (map (lambda (x) (hash-ref 'node-type x))
+                                      ;;(match x 
+                                       ;; [(hash-table ('nodetype op)) x]
+                                       ;; [_ x])) 
+                                      ops)) 
+             (get-structured-python l) 
+             (map get-structured-python c))]
+    
     [_ (error 'parse (string-append "Haven't handled a case yet:\n"
                                     (format "~s" pyjson)))]))
 

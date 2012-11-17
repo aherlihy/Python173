@@ -57,12 +57,24 @@
             [(Mult) (binop "__mult__" (first args) (second args))];(11/4)
             [(Div) (binop "__div__" (first args) (second args))];(11/4)
             [(USub) (unop "__neg__" (first args))]
-            [(And) (if (empty? args) (CId 'True) (desugar-inner (PyIf (first args) (PyOp id (rest args)) (first args))))];NOTE need to desugar numbers into booleans for numbers to work
-            ;;[(Or)
+            [(And) (if (= 1 (length args)) (desugar-inner(first args)) (desugar-inner (PyIf (first args) (PyOp id (rest args)) (first args))))];NOTE need to desugar numbers into booleans for numbers to work
+            [(Or) (if (= 1 (length args)) (desugar-inner(first args)) (desugar-inner (PyIf (first args) (first args) (PyOp id (rest args)) )))]
             [(Not) (desugar-inner (PyIf (first args) (PyId 'False) (PyId 'True)))]
+            [(Gt) (binop ">" (first args) (second args))]
+            [(Lt) (desugar-inner (PyOp 'Not (list (PyOp 'GtE args))))]
+            [(GtE) (binop ">=" (first args) (second args))]
+            [(LtE) (desugar-inner (PyOp 'Not (list (PyOp 'Gt args))))]
+            [(Eq) (binop "=" (first args) (second args))]
+            [(NotEq) (desugar-inner (PyOp 'Not (list (PyOp 'Eq args))))]
+            [(Is) (binop "=" (first args) (second args))]
+            
             [else (CApp (CPrimF id);~why desugar if not add/sub/etc?
                         (map desugar-inner args)
                         (CTuple empty))])]
+    [PyComp (ops l c)
+            (if (= 1 (length ops))
+                (desugar-inner (PyOp (first ops) (list l (first c))))
+                (desugar-inner (PyOp 'And (list (PyOp (first ops) (list l (first c))) (PyComp (rest ops) (first c) (rest c))))))]
     [PyStr (s) (CStr s)]
     [PyPass () (CNone)]
     ;;[else (error 'desugar (string-append "not implemented: "

@@ -361,6 +361,12 @@
 (define-primf (str-mult left right)
   (m-return right))
 
+;none eq?
+(define-primf (none-eq left right)
+  (m-return (type-case CVal right
+                  [VNone () (VBool 1)]
+                  [else (VBool 0)])))
+
 ;;gets a value from a box
 (define-primf (get-box (box VBox?))
   (pm-lookup-store (VBox-v box)))
@@ -394,8 +400,15 @@
     [(int-neg) neg]
     [(int-mult) mult];(11/4)
     [(int-div) div];(11/4)
+    ;[(int-gt) int-gt];(11/16)
+    ;[(int-gte) int-gte];(11/16)
+    ;[(int-eq) int-eq];(11/16)
     [(str-add) str-add];(11/4)
     [(str-mult) str-mult];(11/4)
+    ;[(str-gt) str-gt];(11/16)
+    ;[(str-gte) str-gte];(11/16)
+    ;[(str-eq) str-eq];(11/16)
+    [(none-eq) none-eq];(11/16)
     [(get-box) get-box]
     [(set-box) set-box]
     [(class-has-member?) class-has-member?]
