@@ -21,7 +21,7 @@
         (get-structured-python
           (parse-python/port port python-path))))))
 
-(define python-path "/home/joe/bin/python")
+(define python-path "/course/cs173/python/Python-3.2.3/python")
 
 (command-line
   #:once-each

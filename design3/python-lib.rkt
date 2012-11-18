@@ -188,12 +188,15 @@ that calls the primitive `print`.
                          (CPrimF 'tuple-length))
                  (values "__add__"
                          (CPrimF 'tuple-append))
+                 (values "__mult__"
+                         (CPrimF 'tuple-mult))
                  (values "="
                          (CPrimF 'none-eq))))
 
 (define lib-binds;put all default vals/keywords
   (list
    (values 'print (CPrimF 'print))
+   (values 'len (CPrimF 'tuple-length))
    (values 'True (CTrue))
    (values 'False (CFalse))
    (values 'None (CNone))
