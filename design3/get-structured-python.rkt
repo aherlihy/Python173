@@ -38,6 +38,14 @@ structure that you define in python-syntax.rkt
                  ('value value))
      (PySet! (get-structured-python (first vars))
              (get-structured-python value))]
+    [(hash-table ('nodetype "AugAssign")
+                 ('target var)
+                 ('value value)
+                 ('op (hash-table ('nodetype op))))
+     (PySet! (get-structured-python var)
+             (PyOp (string->symbol op)
+              (list (PyId (get-structured-python var));deal with this
+                    (get-structured-python value))))]
     [(hash-table ('nodetype "Name")
                  ('ctx (hash-table ('nodetype "Store")))
                  ('id id))
@@ -104,8 +112,8 @@ structure that you define in python-syntax.rkt
                  (get-structured-python right)))]
     [(hash-table ('nodetype "BoolOp")
                  ('values v)
-                 ('op op))
-     (PyOp (map string->symbol op)
+                 ('op (hash-table ('nodetype op))))
+     (PyOp (string->symbol op)
            (map get-structured-python v))]
     [(hash-table ('nodetype "UnaryOp")
                  ('op (hash-table ('nodetype op)))
@@ -127,7 +135,7 @@ structure that you define in python-syntax.rkt
                  ('ops ops) 
                  ('comparators c)
                  ('left l))
-     (PyComp (map string->symbol (map (lambda (x) (hash-ref 'node-type x))
+     (PyComp (map string->symbol (map (lambda (x) (hash-ref x 'nodetype))
                                       ops)) 
              (get-structured-python l) 
              (map get-structured-python c))]

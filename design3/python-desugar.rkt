@@ -37,9 +37,15 @@
                        (rest es))];~create nested lists since each item in seq is a pair
     [PyId (x) (CId x)]
     [PySet! (id value) (CSet! id (desugar-inner value))]
-    [PyApp (f args varargs) (CApp (desugar-inner f)
+    [PyApp (f args varargs) 
+           ;(case f
+            ; [(PyId 'bool) (desugar-inner (PyIf (first args) (PyId 'True) (PyId 'False)))]
+            ; [else 
+           (CApp (desugar-inner f)
                                   (map desugar-inner args)
-                                  (desugar-inner varargs))]
+                                  (desugar-inner varargs))
+          ; ])
+           ]
     [PyFunc (args vararg body) (CFunc args vararg (desugar-body body))]
     [PyReturn (value) (CReturn (desugar-inner value))]
     [PyIf (test t e)

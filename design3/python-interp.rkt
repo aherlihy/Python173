@@ -326,12 +326,18 @@
               CVal left
             [VBool (n) n]
             [VNum (n) n]
+            [VTuple (l) -nan.0]
             [else +nan.0]))
         (R (type-case 
               CVal right
             [VBool (n) n]
             [VNum (n) n]
-            [else +nan.0])))   
+            [VTuple (l) -nan.0]
+            [else +nan.0])))
+        (if (equal? -nan.0 R)
+            (m-return
+             (VTuple
+              (tuple-mult-helper empty (VTuple-l right) (VNum-n left))));tempory solution, ask William
         (if (not (or (equal? +nan.0 L) (equal? +nan.0 R)))
             (m-return (VNum
              (* L R)))
@@ -343,7 +349,7 @@
                       [VStr (s) (if (equal? +nan.0 L)
                             (interp-error "unhandled operator for *string")
                             (m-return (VStr (mult-helper "" s L))))]
-                      [else (interp-error "unhandled operator for string*")])]))))
+                      [else (interp-error "unhandled operator for string*")])])))))
       
      
 
@@ -459,6 +465,17 @@
            empty
            args))))
 
+;;multiplys a tuple by an int
+(define-primf (tuple-mult (t VTuple?) (n VNum?))
+  (m-return
+   (VTuple
+     (tuple-mult-helper empty (VTuple-l t) (VNum-n n)))))
+
+(define (tuple-mult-helper start t n)
+  (if (>= 0 n)
+      start
+      (tuple-mult-helper (append start t) t (- n 1))))
+
 ;;finds the length of a tuple
 (define-primf (tuple-length (t VTuple?))
   (m-return (VNum (length (VTuple-l t)))))
@@ -509,6 +526,7 @@
     [(class-has-member?) class-has-member?]
     [(class-lookup) class-lookup]
     [(tuple-append) tuple-append]
+    [(tuple-mult) tuple-mult]
     [(tuple-length) tuple-length]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
