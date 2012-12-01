@@ -38,6 +38,14 @@ structure that you define in python-syntax.rkt
                  ('value value))
      (PySet! (get-structured-python (first vars))
              (get-structured-python value))]
+    [(hash-table ('nodetype "AugAssign")
+                 ('target var)
+                 ('value value)
+                 ('op (hash-table ('nodetype op))))
+     (PySet! (get-structured-python var)
+             (PyOp (string->symbol op)
+              (list (PyId (get-structured-python var));deal with this
+                    (get-structured-python value))))]
     [(hash-table ('nodetype "Name")
                  ('ctx (hash-table ('nodetype "Store")))
                  ('id id))
@@ -102,6 +110,11 @@ structure that you define in python-syntax.rkt
      (PyOp (string->symbol op)
            (list (get-structured-python left)
                  (get-structured-python right)))]
+    [(hash-table ('nodetype "BoolOp")
+                 ('values v)
+                 ('op (hash-table ('nodetype op))))
+     (PyOp (string->symbol op)
+           (map get-structured-python v))]
     [(hash-table ('nodetype "UnaryOp")
                  ('op (hash-table ('nodetype op)))
                  ('operand operand))
@@ -131,9 +144,21 @@ structure that you define in python-syntax.rkt
                (PyRaise (string->symbol id) (map get-structured-python args-list))]
               [- (error 'parse (string-append "Raise error\n"
                                     (format "~s" pyjson)))])]))]
-                 
+    [(hash-table ('nodetype "Str")
+                 ('s s))
+     (PyStr s)]
+    ;[(hash-table (
     [(hash-table ('nodetype "Pass"))
      (PyPass)]
+    [(hash-table ('nodetype "Compare")
+                 ('ops ops) 
+                 ('comparators c)
+                 ('left l))
+     (PyComp (map string->symbol (map (lambda (x) (hash-ref x 'nodetype))
+                                      ops)) 
+             (get-structured-python l) 
+             (map get-structured-python c))]
+    
     [_ (error 'parse (string-append "Haven't handled a case yet:\n"
                                     (format "~s" pyjson)))]))
 

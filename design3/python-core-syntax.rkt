@@ -20,7 +20,7 @@
   [CAddGlobal (id : symbol) (bind : CExp)] ;; hack to let the
                                            ;; primitive runtime know
                                            ;; what the values defined
-                                           ;; in lib are
+                                           ;; in lib are (basically hack to put all lib functions in scope before callinganything else)
   [CSet! (id : symbol) (value : CExp)]
   [CApp (fun : CExp) (args : (listof CExp)) (varargs : CExp)]
   [CFunc (args : (listof symbol)) (vararg : (optionof symbol)) (body : CExp)]
@@ -31,11 +31,10 @@
 (define-type CVal
   [VUndefined];;initial value for variables
   [VNone]
-  [VTrue]
-  [VFalse]
+  [VBool (n : number)]
   [VNum (n : number)]
   [VStr (s : string)]
-  [VBox (v : Location)]
+  [VBox (v : Location)];just number
   [VObj (dict : CVal) (class : CVal)]
   [VPrimMap (m : (hashof CVal CVal))]
   [VTuple (l : (listof CVal))]

@@ -27,9 +27,18 @@ that calls the primitive `print`.
                     (CTuple empty))
               (CNone)
               (CError (CStr "assertion failed")))))
-
+(define assert-not-equal
+    (CFunc (list 'a 'b)
+         (none)
+         (CIf (CApp (CPrimF 'equal)
+                    (list (CId 'a)
+                          (CId 'b))
+                    (CTuple empty))
+              (CError (CStr "assertion failed"))
+              (CNone))))
+  
 (define partial-apply
-  (CAddGlobal
+  (CAddGlobal;create global scope
    'partial-apply
    (CFunc (list 'func)
           (some 'args)
@@ -66,13 +75,35 @@ that calls the primitive `print`.
            (list (values "__bool__"
                          (CFunc (list 'this)
                                 (none)
-                                (CReturn (CFalse))))))
+                                (CReturn (CFalse))))
+                 (values "="
+                         (CPrimF 'none-eq))
+                 ))
 
 (make-type bool-type
            (list (values "__bool__"
                          (CFunc (list 'this)
                                 (none)
-                                (CReturn (CId 'this))))))
+                                (CReturn (CId 'this))))
+                 
+                 (values "__add__"
+                         (CPrimF 'int-add))
+                 (values "__sub__"
+                         (CPrimF 'int-sub))
+                 (values "__mult__"
+                         (CPrimF 'int-mult))
+                 (values "__div__"
+                         (CPrimF 'int-div))
+                 (values "__neg__"
+                         (CPrimF 'int-neg))
+                 (values ">"
+                         (CPrimF 'int-cmp))
+                 (values ">="
+                         (CPrimF 'int-cmp))   
+                 (values "="
+                         (CPrimF 'int-cmp))     
+                 ))
+
 
 (make-type num-type
            (list (values "__bool__"
@@ -88,14 +119,45 @@ that calls the primitive `print`.
                          (CPrimF 'int-add))
                  (values "__sub__"
                          (CPrimF 'int-sub))
+                 (values "__mult__"
+                         (CPrimF 'int-mult))
+                 (values "__div__"
+                         (CPrimF 'int-div))
                  (values "__neg__"
-                         (CPrimF 'int-neg))))
+                         (CPrimF 'int-neg))
+                 (values ">"
+                         (CPrimF 'int-gt))
+                 (values ">="
+                         (CPrimF 'int-gte))   
+                 (values "="
+                         (CPrimF 'int-eq))))
 
 (make-type str-type
-           (list))
+           (list (values "__bool__"
+                         (CFunc (list 'this)
+                                (none)
+                                (CIf (CApp (CPrimF 'equal)
+                                           (list (CId 'this)
+                                                 (CStr ""))
+                                           (CTuple empty))
+                                     (CReturn (CFalse))
+                                     (CReturn (CTrue)))))
+                 (values "__add__"
+                         (CPrimF 'str-add))
+
+                 (values "__mult__"
+                         (CPrimF 'int-mult))
+                 (values ">"
+                         (CPrimF 'str-gt))
+                 (values ">="
+                         (CPrimF 'str-gte))   
+                 (values "="
+                         (CPrimF 'str-eq))  ));(11/15)now basically everything-mult
 
 (make-type func-type
-           (list))
+           (list
+            (values "="
+                         (CPrimF 'none-eq))))
 
 (make-type obj-type
            (list (values "__bool__"
@@ -117,27 +179,39 @@ that calls the primitive `print`.
                                                  (CTuple empty))
                                            (CFalse)
                                            (CTrue))
-                                      (CTrue)))))))
+                                      (CTrue)))))
+                 (values "="
+                         (CPrimF 'none-eq))))
 
 (make-type tuple-type
            (list (values "__len__"
                          (CPrimF 'tuple-length))
                  (values "__add__"
-                         (CPrimF 'tuple-append))))
+                         (CPrimF 'tuple-append))
+                 (values "__mult__"
+                         (CPrimF 'tuple-mult))
+                 (values "="
+                         (CPrimF 'none-eq))))
 
-(define lib-binds
+(define lib-binds;put all default vals/keywords
   (list
    (values 'print (CPrimF 'print))
+   (values 'len (CPrimF 'tuple-length))
    (values 'True (CTrue))
    (values 'False (CFalse))
    (values 'None (CNone))
    (values '___assertTrue assert-true)
    (values '___assertEqual assert-equal)
+   (values '___assertIs assert-equal);hack for now, fix for later
+   (values '___assertIsNot assert-not-equal);also hack
    (values 'type class-type)
    (values 'bool bool-type)
    (values 'int num-type)
    (values 'string str-type)
    (values 'tuple tuple-type)
+   (values 'bool (CPrimF 'bool))
+   (values 'int (CPrimF 'int))
+   (values 'float (CPrimF 'float))
    (values 'object obj-type)))
 
 (define lib-exprs
@@ -146,6 +220,7 @@ that calls the primitive `print`.
    none-type
    func-type))
 
+;ASK TA
 (define (python-lib expr)
   (foldr (lambda (pair expr)
            (local [(define-values (name value) pair)]
@@ -153,5 +228,23 @@ that calls the primitive `print`.
                         expr)))
          (foldr CSeq
                 expr
-                lib-exprs)
+                lib-exprs);add all the lib func to a CSeq + return
          lib-binds))
+#|
+(foldr CSeq (CApp (CPrimF 'int-add) (list (CNum 1) (CNum 1)) (CNone)) lib-exprs)
+
+
+
+ (foldr CSeq (CApp (CPrimF 'int-add) (list (CNum 1) (CNum 1)) (CNone) lib-exprs)
+
+->
+
+(CSeq partial-apply (CSeq none-type (CSeq func-type CSeq
+
+->
+
+
+|#
+
+
+
