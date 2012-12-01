@@ -26,6 +26,10 @@
 ;;argument checking to prim functions, but at the moment, I just
 ;;assume they are correct
 
+
+(define is_try false) ; determine return value for exceptions
+(define last_raise (CRaise "No Previous Raise" (list))) ; keep track of prev raise for re-raises
+
 ;;helper macro for (define-primf)
 (define-syntax prim-bind
   (syntax-rules (&)
@@ -669,6 +673,17 @@
                 [(if (equal? test-v (VBool 0))
                      (m-interp e env)
                      (m-interp t env))]))]
+    [CRaise (type msg)
+              (if (string=? type "ReRaise")
+                (m-interp last_raise env)
+                (begin 
+                  (set! last_raise (CRaise type msg))
+                (let ((pret-args 
+                       (foldl 
+                        (lambda (a b) (string-append b a))
+                        (string-append type ": ") (map (lambda (s) (string-append s ", ")) msg))))
+                  (m-interp (CError (CStr pret-args)) env))))
+              ]
     [CError (val)
             (m-bind (m-interp val env) pm-error)]
     ;;[else (error 'm-interp (string-append "not implemented: "

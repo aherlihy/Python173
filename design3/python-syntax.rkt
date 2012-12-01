@@ -11,9 +11,12 @@
   [PyReturn (value : PyExp)]
   [PyIf (test : PyExp) (then : PyExp) (else : PyExp)]
   [PyOp (id : symbol) (args : (listof PyExp))]
-  [PyRaise (type : symbol) (message :(listof PyExp))])
+  [PyRaise (type : string) (message :(listof string))]
   [PyStr (s : string)]
   [PyComp (ops : (listof symbol)) (l : PyExp) (c : (listof PyExp))]
+  [PyTryFinal (try : (listof PyExp)) (final : (listof PyExp))]
+  [PyTryExcp (try : (listof PyExp)) (except : (listof PyExp)) (else : (listof PyExp))]
+  [PyExcept (type : PyExp) (body : (listof PyExp))]
   [PyPass])
 
 (define someF some)

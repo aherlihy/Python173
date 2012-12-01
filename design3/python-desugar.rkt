@@ -83,7 +83,7 @@
                 (desugar-inner (PyOp 'And (list (PyOp (first ops) (list l (first c))) (PyComp (rest ops) (first c) (rest c))))))]
     [PyStr (s) (CStr s)]
     [PyPass () (CNone)]
-    [PyRaise (e m) (CNone)] ;;FIX ME PLEASE DEAR GOD
+    [PyRaise (e m) (CRaise e m)]
     ;;[else (error 'desugar (string-append "not implemented: "
     ;;                                     (to-string exp)))]
     ))

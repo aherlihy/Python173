@@ -129,7 +129,7 @@ structure that you define in python-syntax.rkt
                  ('cause c)
                  ('exc e))
      (if (equal? e #\nul)
-         (PyRaise (string->symbol "ReRaise") (list (PyPass)))
+         (PyRaise "ReRaise" (list))
          (match e
            [(hash-table ('nodetype "Call")
                  ('keywords keywords) ;; ignoring keywords for now
@@ -141,9 +141,14 @@ structure that you define in python-syntax.rkt
               [(hash-table ('nodetype "Name")
                            ('ctx ctx)
                            ('id id))
-               (PyRaise (string->symbol id) (map get-structured-python args-list))]
-              [- (error 'parse (string-append "Raise error\n"
-                                    (format "~s" pyjson)))])]))]
+               (PyRaise id (map (lambda (str)
+                                  (match str
+                                    [(hash-table ('nodetype "Str")
+                                                 ('s s))
+                                     s]
+                                    [_ (error 'parse "Not a valid exception message \n")]))
+                                  args-list))]
+              [_ (error 'parse "Raise error\n")])]))]
     [(hash-table ('nodetype "Str")
                  ('s s))
      (PyStr s)]
@@ -158,7 +163,20 @@ structure that you define in python-syntax.rkt
                                       ops)) 
              (get-structured-python l) 
              (map get-structured-python c))]
-    
+    [(hash-table ('node-type "TryFinally")
+                 ('body try)
+                 ('finalBody final))
+     (PyTryFinal (map get-structured-python try) (map get-structured-python final))]
+    [(hash-table ('node-type "TryExcept")
+                 ('body try)
+                 ('orelse else)
+                 ('handlers excpt))
+     (PyTryExcp (map get-structured-python try) (map get-structured-python excpt) (map get-structured-python else))]
+    [(hash-table ('node-type "ExceptHandler")
+                 ('body except)
+                 ('name n)
+                 ('type type))
+     (PyExcept (get-structured-python type) (map get-structured-python except))]
     [_ (error 'parse (string-append "Haven't handled a case yet:\n"
                                     (format "~s" pyjson)))]))
 

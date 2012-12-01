@@ -26,6 +26,7 @@
   [CFunc (args : (listof symbol)) (vararg : (optionof symbol)) (body : CExp)]
   [CReturn (value : CExp)]
   [CIf (test : CExp) (then : CExp) (else : CExp)]
+  [CRaise (type : string) (msg : (listof string))]
   [CError (val : CExp)])
 
 (define-type CVal
