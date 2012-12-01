@@ -112,6 +112,26 @@ structure that you define in python-syntax.rkt
                  ('elts elts))
      (PyTuple
       (map get-structured-python elts))]
+    [(hash-table ('nodetype "Raise")
+                 ('cause c)
+                 ('exc e))
+     (if (equal? e #\nul)
+         (PyRaise (string->symbol "ReRaise") (list (PyPass)))
+         (match e
+           [(hash-table ('nodetype "Call")
+                 ('keywords keywords) ;; ignoring keywords for now
+                 ('kwargs kwargs)     ;; ignoring kwargs for now
+                 ('starargs starargs)
+                 ('args args-list)
+                 ('func func-expr)) 
+            (match func-expr
+              [(hash-table ('nodetype "Name")
+                           ('ctx ctx)
+                           ('id id))
+               (PyRaise (string->symbol id) (map get-structured-python args-list))]
+              [- (error 'parse (string-append "Raise error\n"
+                                    (format "~s" pyjson)))])]))]
+                 
     [(hash-table ('nodetype "Pass"))
      (PyPass)]
     [_ (error 'parse (string-append "Haven't handled a case yet:\n"

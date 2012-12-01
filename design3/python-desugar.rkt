@@ -59,6 +59,7 @@
                         (map desugar-inner args)
                         (CTuple empty))])]
     [PyPass () (CNone)]
+    [PyRaise (e m) (CNone)] ;;FIX ME PLEASE DEAR GOD
     ;;[else (error 'desugar (string-append "not implemented: "
     ;;                                     (to-string exp)))]
     ))

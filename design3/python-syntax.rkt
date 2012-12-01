@@ -11,7 +11,8 @@
   [PyReturn (value : PyExp)]
   [PyIf (test : PyExp) (then : PyExp) (else : PyExp)]
   [PyOp (id : symbol) (args : (listof PyExp))]
-  [PyPass])
+  [PyPass]
+  [PyRaise (type : symbol) (message :(listof PyExp))])
 
 (define someF some)
 (define noneF none)
