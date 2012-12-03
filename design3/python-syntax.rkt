@@ -15,7 +15,7 @@
   [PyStr (s : string)]
   [PyComp (ops : (listof symbol)) (l : PyExp) (c : (listof PyExp))]
   [PyTryFinal (try : PyExp) (final : PyExp)];desugar tryExcp to TryFinal?
-  [PyTryExcp (try : PyExp) (except : PyExp) (else : PyExp)]
+  [PyTryExcp (try : PyExp) (except : PyExp) (e : PyExp)]
   [PyExcept (type : PyExp) (body : PyExp)]
   [PyPass])
 

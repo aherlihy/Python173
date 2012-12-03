@@ -163,20 +163,21 @@ structure that you define in python-syntax.rkt
                                       ops)) 
              (get-structured-python l) 
              (map get-structured-python c))]
-    [(hash-table ('node-type "TryFinally")
+    [(hash-table ('nodetype "TryFinally")
                  ('body try)
-                 ('finalBody final))
+                 ('finalbody final))
      (PyTryFinal (PySeq (map get-structured-python try)) (PySeq (map get-structured-python final)))]
-    [(hash-table ('node-type "TryExcept")
+    [(hash-table ('nodetype "TryExcept")
                  ('body try)
-                 ('orelse else)
+                 ('orelse e)
                  ('handlers excpt))
-     (PyTryExcp (PySeq (map get-structured-python try)) (get-structured-python (first excpt)) (PySeq (map get-structured-python else)))]
-    [(hash-table ('node-type "ExceptHandler")
+     (PyTryExcp (PySeq (map get-structured-python try)) (get-structured-python (first excpt)) (PySeq (map get-structured-python e)))]
+    [(hash-table ('nodetype "ExceptHandler")
                  ('body except)
                  ('name n)
                  ('type type))
-     (PyExcept (get-structured-python type) (PySeq (map get-structured-python except)))]
+     (PyExcept (if (equal? type #\nul) (PyId (string->symbol "ExceptAll")) (get-structured-python type))
+                    (PySeq (map get-structured-python except)))]
     [_ (error 'parse (string-append "Haven't handled a case yet:\n"
                                     (format "~s" pyjson)))]))
 
