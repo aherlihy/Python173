@@ -27,6 +27,8 @@
   [CReturn (value : CExp)]
   [CIf (test : CExp) (then : CExp) (else : CExp)]
   [CRaise (type : string) (msg : (listof string))]
+  [CTryFinal (try : CExp) (final : CExp)]
+  [CTryExcp (try :  CExp) (name : CExp) (except : CExp) (else : CExp)]
   [CError (val : CExp)])
 
 (define-type CVal

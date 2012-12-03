@@ -14,9 +14,9 @@
   [PyRaise (type : string) (message :(listof string))]
   [PyStr (s : string)]
   [PyComp (ops : (listof symbol)) (l : PyExp) (c : (listof PyExp))]
-  [PyTryFinal (try : (listof PyExp)) (final : (listof PyExp))]
-  [PyTryExcp (try : (listof PyExp)) (except : (listof PyExp)) (else : (listof PyExp))]
-  [PyExcept (type : PyExp) (body : (listof PyExp))]
+  [PyTryFinal (try : PyExp) (final : PyExp)];desugar tryExcp to TryFinal?
+  [PyTryExcp (try : PyExp) (except : PyExp) (else : PyExp)]
+  [PyExcept (type : PyExp) (body : PyExp)]
   [PyPass])
 
 (define someF some)

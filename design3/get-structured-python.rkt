@@ -166,17 +166,17 @@ structure that you define in python-syntax.rkt
     [(hash-table ('node-type "TryFinally")
                  ('body try)
                  ('finalBody final))
-     (PyTryFinal (map get-structured-python try) (map get-structured-python final))]
+     (PyTryFinal (PySeq (map get-structured-python try)) (PySeq (map get-structured-python final)))]
     [(hash-table ('node-type "TryExcept")
                  ('body try)
                  ('orelse else)
                  ('handlers excpt))
-     (PyTryExcp (map get-structured-python try) (map get-structured-python excpt) (map get-structured-python else))]
+     (PyTryExcp (PySeq (map get-structured-python try)) (get-structured-python (first excpt)) (PySeq (map get-structured-python else)))]
     [(hash-table ('node-type "ExceptHandler")
                  ('body except)
                  ('name n)
                  ('type type))
-     (PyExcept (get-structured-python type) (map get-structured-python except))]
+     (PyExcept (get-structured-python type) (PySeq (map get-structured-python except)))]
     [_ (error 'parse (string-append "Haven't handled a case yet:\n"
                                     (format "~s" pyjson)))]))
 

@@ -1,7 +1,4 @@
 try:
     pass
-except ZeroDivisionError:
+finally:
     pass
-else:
-    pass
-
