@@ -685,7 +685,7 @@
                   (m-interp (CError (CStr pret-args)) env))))
               ]
     [CTryExcp (try name except e)
-              (pm-catch-error (m-do [] try) 
+              (pm-catch-error (m-interp try env) 
                               (lambda (error)
                                 (if (or (string=? (VStr-s error) name) (string=? (VStr-s error) "ExceptAll")) 
                                     (m-interp except env)

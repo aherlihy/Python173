@@ -1,7 +1,4 @@
-try:
-    print("trying")
-    raise Exception("BAD!")
-except:
-    print("except")
-else:
-    print("else")
+a=5
+print(a)
+a=10
+print(a)
