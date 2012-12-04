@@ -1,6 +1,7 @@
 try:
-    pass
-except:
-    pass
-else:
-    pass
+    print("try")
+    raise KeyError("err")
+except KeyError:
+    print("except")
+finally:
+    print("final")

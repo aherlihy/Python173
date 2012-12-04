@@ -171,7 +171,7 @@ structure that you define in python-syntax.rkt
                  ('body try)
                  ('orelse e)
                  ('handlers excpt))
-     (PyTryExcp (PySeq (map get-structured-python try)) (get-structured-python (first excpt)) (PySeq (map get-structured-python e)))]
+     (PyTryExcp (PySeq (map get-structured-python try)) (get-structured-python (first excpt)) (if (empty? e) (PyPass) ((PySeq (map get-structured-python e)))))]
     [(hash-table ('nodetype "ExceptHandler")
                  ('body except)
                  ('name n)

@@ -5,7 +5,7 @@
 (define-type (ROption 'a);;~what are the 'a/'b/'c types? are they defined anywhere or are they just generics
   [RValue (value : 'a)]
   [RReturn (value : CVal)];;why have multiple return values?
-  [RError (value : CVal)])
+  [RError (value : CVal)]);;CVal is always VString
 
 (define-type-alias (PM 'b)
   (Store -> (Store * (ROption 'b))));what is *
@@ -67,6 +67,13 @@
            (type-case (ROption 'f) ret
              [RError (v) ((catch v) n-store)]
              [else (values n-store ret)]))))
+
+(define (pm-try-catch (m : (PM 'f)) (catch : (CVal -> (PM 'f))) (els : (CVal -> (PM 'f)))) : (PM 'f)
+  (lambda (store)
+    (local [(define-values (n-store ret) (m store))]
+           (type-case (ROption 'f) ret
+             [RError (v) ((catch v) n-store)]
+             [else ((els (VBool 1)) n-store)]))))
 
 (define pm-get-store
   (lambda (store)

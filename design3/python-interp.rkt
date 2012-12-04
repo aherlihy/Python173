@@ -10,6 +10,8 @@
 (require (typed-in racket [string>? : (string string -> boolean)]))
 (require (typed-in racket [string>=? : (string string -> boolean)]))
 (require (typed-in racket [string->number : (string -> number)]))
+(require (typed-in racket [string-split : (string -> (listof string))]))
+
 ;;note: interp and primitives need to be mutually recursive -- primops
 ;;need to lookup and apply underscore members (ie + calls __plus__),
 ;;and applying a function requires m-interp.  Since racket doesn't
@@ -681,17 +683,23 @@
                 (let ((pret-args 
                        (foldl 
                         (lambda (a b) (string-append b a))
-                        (string-append type ": ") (map (lambda (s) (string-append s ", ")) msg))))
+                        (string-append type " : ") (map (lambda (s) (string-append s ", ")) msg))))
                   (m-interp (CError (CStr pret-args)) env))))
               ]
     [CTryExcp (try name except e)
-              (pm-catch-error (m-interp try env) 
-                              (lambda (error)
-                                (if (or (string=? (VStr-s error) name) (string=? (VStr-s error) "ExceptAll")) 
-                                    (m-interp except env)
-                                    (begin (m-interp e env) (interp-error (VStr-s error)))))
+              (pm-try-catch (m-interp try env) 
+                              (lambda (error) 
+                                 (if (or (string=? (first (string-split (VStr-s error))) name) (string=? name "ExceptAll")) 
+                                  (m-interp except env)
+                                    (m-interp (CRaise (VStr-s error) (list)) env))) ;;(interp-error (VStr-s error)))))
+                              (lambda (x) (m-interp e env))
                               )]
-    [CTryFinal (body final) (m-return (VNone))]
+    [CTryFinal (try final)
+              (pm-try-catch (m-interp try env) 
+                              (lambda (error) ; this will  be called if an error has been thrown and not caught
+                                    (m-interp (CSeq final (CRaise (VStr-s error) (list))) env)) ;;(interp-error (VStr-s error)))))
+                              (lambda (x) (m-interp final env))
+                              )]
     [CError (val)
             (m-bind (m-interp val env) pm-error)]
     ;;[else (error 'm-interp (string-append "not implemented: "
