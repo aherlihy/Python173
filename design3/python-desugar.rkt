@@ -83,13 +83,14 @@
                 (desugar-inner (PyOp 'And (list (PyOp (first ops) (list l (first c))) (PyComp (rest ops) (first c) (rest c))))))]
     [PyStr (s) (CStr s)]
     [PyPass () (CNone)]
-    [PyTryFinal (try final) (CTryFinal try final)]
-    [PyTryExcp (try except else) (type-case PyExp except
-                                   [PyExcept (t b) (CTryExpt try t b else)]
-                                   [_ (error 'desugar "Not handler type in Try Except \n")])]
+    [PyTryFinal (try final) (CTryFinal (desugar-inner try) (desugar-inner final))]
+    [PyTryExcp (try except e) (type-case PyExp except
+                                   [PyExcept (t b) (CTryExcp (desugar-inner try) (symbol->string (PyId-x t)) (desugar-inner b) (desugar-inner e))]
+                                   [else (error 'desugar "Not handler type in Try Except \n")])]
     [PyRaise (e m) (CRaise e m)]
     ;;[else (error 'desugar (string-append "not implemented: "
     ;;                                     (to-string exp)))]
+    [PyExcept (type body) (error 'desugar "Misplaced handler type \n")]
     ))
 ;returns a CApp
 ;   takes in (1) Cexp func

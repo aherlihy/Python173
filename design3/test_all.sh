@@ -28,7 +28,6 @@ for f in $FILES
 do
    FILENAME=$(basename $f)
    echo "Testing $FILENAME"
-   # This is where you specify which script you want run on each file.
    cat $f | racket python-main.rkt --python-path /course/cs173/python/Python-3.2.3/python --interp 2> $FILENAME"-OUT"
    mv $FILENAME"-OUT" $DIRECTORY/$FILENAME"-OUT"
 

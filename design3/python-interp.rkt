@@ -684,6 +684,14 @@
                         (string-append type ": ") (map (lambda (s) (string-append s ", ")) msg))))
                   (m-interp (CError (CStr pret-args)) env))))
               ]
+    [CTryExcp (try name except e)
+              (pm-catch-error (m-interp try env) 
+                              (lambda (error)
+                                (if (or (string=? (VStr-s error) name) (string=? (VStr-s error) "ExceptAll")) 
+                                    (m-interp except env)
+                                    (begin (m-interp e env) (interp-error (VStr-s error)))))
+                              )]
+    [CTryFinal (body final) (m-return (VNone))]
     [CError (val)
             (m-bind (m-interp val env) pm-error)]
     ;;[else (error 'm-interp (string-append "not implemented: "

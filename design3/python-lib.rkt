@@ -220,7 +220,7 @@ that calls the primitive `print`.
    none-type
    func-type))
 
-;ASK TA
+
 (define (python-lib expr)
   (foldr (lambda (pair expr)
            (local [(define-values (name value) pair)]
