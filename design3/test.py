@@ -1,4 +1,6 @@
 try:
     pass
-finally:
+except:
+    pass
+else:
     pass
