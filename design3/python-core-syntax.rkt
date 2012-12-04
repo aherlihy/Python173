@@ -30,6 +30,7 @@
   [CTryFinal (try : CExp) (final : CExp)]
   [CTryExcp (try :  CExp) (name : string) (except : CExp) (e : CExp)]
   [CList (elts : (listof CExp))]
+  [CDict (keys : (listof CExp)) (values : (listof CExp))]
   [CError (val : CExp)])
 
 (define-type CVal

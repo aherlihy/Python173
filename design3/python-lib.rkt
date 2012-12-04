@@ -136,7 +136,8 @@ that calls the primitive `print`.
                  (values "="
                          (CPrimF 'int-eq))
                  (values "is"
-                         (CPrimF 'is))))
+                         (CPrimF 'is))
+                 ))
 
 (make-type str-type
            (list (values "__bool__"
@@ -205,7 +206,8 @@ that calls the primitive `print`.
                  (values "="
                          (CPrimF 'equal))
                  (values "is"
-                         (CPrimF 'is))))
+                         (CPrimF 'is))
+                 ))
 (make-type list-type
            (list (values "__len__"
                          (CPrimF 'list-length))
@@ -217,11 +219,22 @@ that calls the primitive `print`.
                          (CPrimF 'equal))
                  (values "is"
                          (CPrimF 'is))))
+(make-type dict-type
+         (list (values "__len__"
+                         (CPrimF 'list-length))
+                 (values "__add__"
+                         (CPrimF 'list-append))
+                 (values "__mult__"
+                         (CPrimF 'list-mult))
+                 (values "="
+                         (CPrimF 'equal))
+                 (values "is"
+                         (CPrimF 'is))))  
 
 (define lib-binds;put all default vals/keywords
   (list
    (values 'print (CPrimF 'print))
-   (values 'list (CPrimF 'list-f))
+   (values 'LIST (CPrimF 'list-f))
    (values 'len (CPrimF 'gen-length))
    (values 'True (CTrue))
    (values 'False (CFalse))
@@ -236,6 +249,7 @@ that calls the primitive `print`.
    (values 'string str-type)
    (values 'tuple tuple-type)
    (values 'list list-type)
+   (values 'dict dict-type)
    (values 'bool (CPrimF 'bool))
    (values 'int (CPrimF 'int))
    (values 'float (CPrimF 'float))

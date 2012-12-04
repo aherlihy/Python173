@@ -32,7 +32,12 @@ structure that you define in python-syntax.rkt
     [(hash-table ('nodetype "Name")
                  ('ctx (hash-table ('nodetype "Load")))
                  ('id id))
-     (PyId (string->symbol id))]
+     (begin (display "name: ")
+            (display id)
+            (display "\n")
+            (if (string=? id "list") 
+                (PyId (string->symbol "LIST"))
+                (PyId (string->symbol id))))];I HAVE NO IDEA WHY THIS WORKS
     [(hash-table ('nodetype "Assign")
                  ('targets vars)
                  ('value value))
@@ -184,6 +189,12 @@ structure that you define in python-syntax.rkt
                  ('elts elts))
      (PyList
       (map get-structured-python elts))]
+    
+    [(hash-table ('nodetype "Dict")
+                 ('keys keys)
+                 ('values values))
+     (PyDict
+      (map get-structured-python keys) (map get-structured-python values))]
     [_ (error 'parse (string-append "Haven't handled a case yet:\n"
                                     (format "~s" pyjson)))]))
 

@@ -11,6 +11,8 @@
 (require (typed-in racket [string>? : (string string -> boolean)]))
 (require (typed-in racket [string>=? : (string string -> boolean)]))
 (require (typed-in racket [string->number : (string -> number)]))
+(require (typed-in racket [regexp-split : (string string -> (listof string))]))
+(require (typed-in racket [remove* : ((listof string) (listof string) -> (listof string))]))
 (require (typed-in racket [string-split : (string -> (listof string))]))
 
 ;;note: interp and primitives need to be mutually recursive -- primops
@@ -273,15 +275,25 @@
               (begin (display " ")
                      (print rest)))])))
 
+;tell if the item is iterable
+(define (is-iterable it)
+  (type-case CExp it
+    [CTuple (l) true]
+    [CList (l) true]
+    [CStr (s) true]
+    [else false]))
+
+;returns a list of strings given a string
+(define (get-str-list str)
+  (map VStr (remove* (list "") (regexp-split "(0*)" str))))
+
 ;list built-in func
-(define-primf (list-f val & rest)
-  (m-do ([prettied (pretty val)]
-         [(m-return (display prettied))]
-         [(if (empty? rest)
-              (begin (display "\n")
-                     (m-return (VNone)))
-              (begin (display " ")
-                     (list-f rest)))])))
+(define-primf (list-f iter)
+   (type-case CVal iter
+    [VTuple (l) (m-return (VList l))]
+    [VList (l) (m-return (VList l))]
+    [VStr (s) (m-return (VList (get-str-list s)))]
+    [else (interp-error "argument not iterable")]))
 
 ;;checks whether the 2 arguments are equal
 (define-primf (equal left right)
@@ -568,11 +580,12 @@
 ;bool cast
 (define-primf (bool val)
   (m-return (VBool 1)))
+
 ;;finds the appropriate racket function for a given VPrimF symbol
 (define (python-prim op) : ((listof CVal) -> (PM CVal))
   (case op
     [(print) print]
-    ;[(list-f) (begin (display "py-prim") list-f)]
+    [(list-f) list-f]
     [(equal) equal]
     [(float) float]
     [(int) int]
