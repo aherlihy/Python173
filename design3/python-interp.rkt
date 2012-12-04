@@ -7,6 +7,7 @@
                    [display : (string -> void)]
                    [andmap : (('a -> boolean) (listof 'a) -> boolean)])
          (typed-in racket/math))
+(require (typed-in racket [eqv? : ('a 'b -> boolean)]))
 (require (typed-in racket [string>? : (string string -> boolean)]))
 (require (typed-in racket [string>=? : (string string -> boolean)]))
 (require (typed-in racket [string->number : (string -> number)]))
@@ -65,7 +66,7 @@
 ;;defines the racket version of a primf.
 ;;syntax: (define-primf (name . args) body)
 ;;args: (arg ... & rest)
-;;arg (including rest): id or (id predicate)
+;;arg (including rest): id or (id predicate)[(is) is]
 ;;notes: & rest is optional, bound to remaining arguments
 ;;actual racket function's type is ((listof CVal) -> (PM CVal))
 ;;if predicate is present, define-primf throws an error unless the
@@ -288,6 +289,11 @@
               right)
       (m-return (VBool 1))
       (m-return (VBool 0))))
+
+(define-primf (is left right)
+  (m-return (if (eqv? left right)
+                (VBool 1)
+                (VBool 0))))
 
 ;;numeric addition
 (define-primf (add left right)
@@ -585,6 +591,7 @@
     [(str-gte) str-gte];(11/16)
     [(str-eq) str-eq];(11/16)
     [(none-eq) none-eq];(11/16)
+    [(is) is]
     [(get-box) get-box]
     [(set-box) set-box]
     [(class-has-member?) class-has-member?]

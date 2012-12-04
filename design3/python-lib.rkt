@@ -78,6 +78,8 @@ that calls the primitive `print`.
                                 (CReturn (CFalse))))
                  (values "="
                          (CPrimF 'none-eq))
+                 (values "is"
+                         (CPrimF 'is))
                  ))
 
 (make-type bool-type
@@ -97,11 +99,13 @@ that calls the primitive `print`.
                  (values "__neg__"
                          (CPrimF 'int-neg))
                  (values ">"
-                         (CPrimF 'int-cmp))
+                         (CPrimF 'int-gt))
                  (values ">="
-                         (CPrimF 'int-cmp))   
+                         (CPrimF 'int-gte))   
                  (values "="
-                         (CPrimF 'int-cmp))     
+                         (CPrimF 'int-eq))
+                 (values "is"
+                         (CPrimF 'is))
                  ))
 
 
@@ -130,7 +134,9 @@ that calls the primitive `print`.
                  (values ">="
                          (CPrimF 'int-gte))   
                  (values "="
-                         (CPrimF 'int-eq))))
+                         (CPrimF 'int-eq))
+                 (values "is"
+                         (CPrimF 'is))))
 
 (make-type str-type
            (list (values "__bool__"
@@ -152,12 +158,16 @@ that calls the primitive `print`.
                  (values ">="
                          (CPrimF 'str-gte))   
                  (values "="
-                         (CPrimF 'str-eq))  ));(11/15)now basically everything-mult
+                         (CPrimF 'str-eq)) 
+                 (values "is"
+                         (CPrimF 'is))));(11/15)now basically everything-mult
 
 (make-type func-type
            (list
             (values "="
-                         (CPrimF 'none-eq))))
+                         (CPrimF 'equal))
+            (values "is"
+                         (CPrimF 'is))))
 
 (make-type obj-type
            (list (values "__bool__"
@@ -181,7 +191,9 @@ that calls the primitive `print`.
                                            (CTrue))
                                       (CTrue)))))
                  (values "="
-                         (CPrimF 'none-eq))))
+                         (CPrimF 'equal))
+                 (values "is"
+                         (CPrimF 'is))))
 
 (make-type tuple-type
            (list (values "__len__"
@@ -191,7 +203,9 @@ that calls the primitive `print`.
                  (values "__mult__"
                          (CPrimF 'tuple-mult))
                  (values "="
-                         (CPrimF 'none-eq))))
+                         (CPrimF 'equal))
+                 (values "is"
+                         (CPrimF 'is))))
 (make-type list-type
            (list (values "__len__"
                          (CPrimF 'list-length))
@@ -200,7 +214,9 @@ that calls the primitive `print`.
                  (values "__mult__"
                          (CPrimF 'list-mult))
                  (values "="
-                         (CPrimF 'none-eq))))
+                         (CPrimF 'equal))
+                 (values "is"
+                         (CPrimF 'is))))
 
 (define lib-binds;put all default vals/keywords
   (list
