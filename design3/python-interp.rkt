@@ -89,7 +89,8 @@
     [VPrimF (id) (get-global "func-type")]
     [VPrimMap (m) (interp-error "prim maps don't have a class")]
     [VClosure (e a v b) (get-global "func-type")]
-    [VTuple (l) (get-global "tuple-type")]))
+    [VTuple (l) (get-global "tuple-type")]
+    [VList (elts) (get-global "list-type")]))
 
 ;;get the dict out of obj
 (define (dict (obj : CVal)) : (PM CVal)
@@ -185,6 +186,7 @@
             (lambda (error)
               (class-lookup (list obj name))))]))
 
+
 ;;will be replaced by a to-string method in classes
 (define (pretty arg)
   (type-case CVal arg
@@ -209,6 +211,24 @@
                                       (first rvals)
                                       (rest rvals))
                                ")"))]))]
+        [VList (l) (m-do ([vals (m-map pretty l)]
+                       [rvals (m-return (reverse vals))])
+                      (cond
+                       [(empty? rvals) "[]"]
+                       [(empty? (rest rvals))
+                        (string-append "["
+                                       (string-append (first rvals)
+                                                      ",]"))]
+                       [else (string-append
+                              "["
+                              (string-append
+                               (foldl (lambda (c t)
+                                        (string-append c
+                                                       (string-append ", "
+                                                                      t)))
+                                      (first rvals)
+                                      (rest rvals))
+                               "]"))]))]
     [VObj (c dict)
           (m-do ([c (get-box (list c))]
                  [c-s (pretty c)]
@@ -251,6 +271,16 @@
                      (m-return (VNone)))
               (begin (display " ")
                      (print rest)))])))
+
+;list built-in func
+(define-primf (list-f val & rest)
+  (m-do ([prettied (pretty val)]
+         [(m-return (display prettied))]
+         [(if (empty? rest)
+              (begin (display "\n")
+                     (m-return (VNone)))
+              (begin (display " ")
+                     (list-f rest)))])))
 
 ;;checks whether the 2 arguments are equal
 (define-primf (equal left right)
@@ -470,6 +500,15 @@
                      l))
            empty
            args))))
+;appends n lists
+(define-primf (list-append & (args (lambda (args) (andmap VList? args))))
+  (m-return
+   (VList
+    (foldr (lambda (t l)
+             (append (VList-elts t)
+                     l))
+           empty
+           args))))
 
 ;;multiplys a tuple by an int
 (define-primf (tuple-mult (t VTuple?) (n VNum?))
@@ -481,10 +520,28 @@
   (if (>= 0 n)
       start
       (tuple-mult-helper (append start t) t (- n 1))))
+;;mulitiplies a list by an int
+(define-primf (list-mult (t VList?) (n VNum?))
+  (m-return
+   (VList
+     (list-mult-helper empty (VList-elts t) (VNum-n n)))))
+     ;;(not strictly neccessary)
+(define (list-mult-helper start t n)
+  (if (>= 0 n)
+      start
+      (list-mult-helper (append start t) t (- n 1))))
+(define-primf (gen-length t)
+  (type-case CVal t
+    [VTuple (l)  (m-return (VNum (length l)))]
+    [VList (l) (m-return (VNum (length l)))]
+    [else (interp-error "undefined operand for len")]))
 
 ;;finds the length of a tuple
 (define-primf (tuple-length (t VTuple?))
   (m-return (VNum (length (VTuple-l t)))))
+;length of a list
+(define-primf (list-length (t VList?))
+  (m-return (VNum (length (VList-elts t)))))
 
 ;int cast
 (define-primf (int val)
@@ -509,6 +566,7 @@
 (define (python-prim op) : ((listof CVal) -> (PM CVal))
   (case op
     [(print) print]
+    ;[(list-f) (begin (display "py-prim") list-f)]
     [(equal) equal]
     [(float) float]
     [(int) int]
@@ -533,7 +591,13 @@
     [(class-lookup) class-lookup]
     [(tuple-append) tuple-append]
     [(tuple-mult) tuple-mult]
-    [(tuple-length) tuple-length]))
+    [(tuple-length) tuple-length]
+    [(list-length) list-length]
+
+    [(gen-length) gen-length]
+    [(list-append) list-append]
+    [(list-mult) list-mult]
+    ))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;            interp
@@ -704,6 +768,10 @@
             (m-bind (m-interp val env) pm-error)]
     ;;[else (error 'm-interp (string-append "not implemented: "
     ;;                                      (to-string expr)))]
+    [CList (elts) (m-do ([contents (m-map (lambda (v)
+                                      (m-interp v env))
+                                    elts)])
+                  (VList contents))]
     ))
 
 (define (interp expr)

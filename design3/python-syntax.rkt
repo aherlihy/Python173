@@ -17,6 +17,7 @@
   [PyTryFinal (try : PyExp) (final : PyExp)]
   [PyTryExcp (try : PyExp) (except : PyExp) (e : PyExp)]
   [PyExcept (type : PyExp) (body : PyExp)]
+  [PyList (elts : (listof PyExp))]
   [PyPass])
 
 (define someF some)

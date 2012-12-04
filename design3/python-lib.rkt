@@ -192,11 +192,21 @@ that calls the primitive `print`.
                          (CPrimF 'tuple-mult))
                  (values "="
                          (CPrimF 'none-eq))))
+(make-type list-type
+           (list (values "__len__"
+                         (CPrimF 'list-length))
+                 (values "__add__"
+                         (CPrimF 'list-append))
+                 (values "__mult__"
+                         (CPrimF 'list-mult))
+                 (values "="
+                         (CPrimF 'none-eq))))
 
 (define lib-binds;put all default vals/keywords
   (list
    (values 'print (CPrimF 'print))
-   (values 'len (CPrimF 'tuple-length))
+   (values 'list (CPrimF 'list-f))
+   (values 'len (CPrimF 'gen-length))
    (values 'True (CTrue))
    (values 'False (CFalse))
    (values 'None (CNone))
@@ -209,6 +219,7 @@ that calls the primitive `print`.
    (values 'int num-type)
    (values 'string str-type)
    (values 'tuple tuple-type)
+   (values 'list list-type)
    (values 'bool (CPrimF 'bool))
    (values 'int (CPrimF 'int))
    (values 'float (CPrimF 'float))

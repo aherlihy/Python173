@@ -178,6 +178,12 @@ structure that you define in python-syntax.rkt
                  ('type type))
      (PyExcept (if (equal? type #\nul) (PyId (string->symbol "ExceptAll")) (get-structured-python type))
                     (PySeq (map get-structured-python except)))]
+     
+    [(hash-table ('nodetype "List")
+                 ('ctx ctx)
+                 ('elts elts))
+     (PyList
+      (map get-structured-python elts))]
     [_ (error 'parse (string-append "Haven't handled a case yet:\n"
                                     (format "~s" pyjson)))]))
 

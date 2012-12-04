@@ -1,7 +1,3 @@
-try:
-    print("try")
-    raise KeyError("err")
-except KeyError:
-    print("except")
-finally:
-    print("final")
+a = [1,2,3]
+b=a
+print(a==b)

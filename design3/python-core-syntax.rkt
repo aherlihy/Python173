@@ -29,6 +29,7 @@
   [CRaise (type : string) (msg : (listof string))]
   [CTryFinal (try : CExp) (final : CExp)]
   [CTryExcp (try :  CExp) (name : string) (except : CExp) (e : CExp)]
+  [CList (elts : (listof CExp))]
   [CError (val : CExp)])
 
 (define-type CVal
@@ -41,6 +42,7 @@
   [VObj (dict : CVal) (class : CVal)]
   [VPrimMap (m : (hashof CVal CVal))]
   [VTuple (l : (listof CVal))]
+  [VList (elts : (listof CVal))]
   ;;[VList (l : Location)] ;; implement using __getattr__ + delegation
   ;;[VDict (l : Location)] ;; implement using __getattr__ + delegation
   [VClosure (env : Env) (args : (listof symbol)) (vararg : (optionof symbol)) (body : CExp)]
