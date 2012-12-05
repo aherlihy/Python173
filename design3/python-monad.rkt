@@ -112,7 +112,7 @@
         (some-v (hash-ref store l))))
 
 (define (pm-add-store (l : Location) (v : CVal)) : (PM CVal)
-  (m-do ([store pm-get-store]
+  (m-do ([store pm-get-store];;get's current store
          [(pm-set-store (hash-set store l v))])
         v))
 

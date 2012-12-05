@@ -16,6 +16,7 @@
 (require (typed-in racket [hash-values : ((hashof 'a 'b) -> (listof 'b))]))
 (require (typed-in racket [hash-keys : ((hashof 'a 'b) -> (listof 'a))]))
 (require (typed-in racket [string-split : (string -> (listof string))]))
+(require (typed-in racket [number->string : (number -> string)]))
 (require (typed-in racket [hash->list : ((hashof 'a 'a) -> (listof (listof 'a)))]))
 
 ;;note: interp and primitives need to be mutually recursive -- primops
@@ -97,7 +98,8 @@
     [VClosure (e a v b) (get-global "func-type")]
     [VTuple (l) (get-global "tuple-type")]
     [VList (elts) (get-global "list-type")]
-    [VDict (h) (get-global "dict-type")]))
+    [VDict (h) (get-global "dict-type")]
+    [VDictM (h) (get-global "mutable-dict-type")]))
 
 ;;get the dict out of obj
 (define (dict (obj : CVal)) : (PM CVal)
@@ -236,7 +238,9 @@
                                       (first rvals)
                                       (rest rvals))
                                "]"))]))]
-    [VDict (h) (pretty (VList (foldr cons (hash-values h) (hash-keys h))))]
+    [VDictM (h) (m-do ([dict (get-box (list h))]
+                       [toPrint (pretty (VList (foldr cons (hash-values (VDict-hashes dict)) (hash-keys (VDict-hashes dict)))))])
+                toPrint)]
     [VObj (c dict)
           (m-do ([c (get-box (list c))]
                  [c-s (pretty c)]
@@ -279,6 +283,15 @@
                      (m-return (VNone)))
               (begin (display " ")
                      (print rest)))])))
+
+;get item from hashmap
+;;WILL DO TOMORROW
+(define-primf (get val & ret);first val is attr, ret is a list of actual args
+    (m-do ([contents (get-box (list (VDictM-b val)))])
+          (cond
+                [(equal? 1 (length ret)) (hash-ref (VDict-hashes contents) (first ret) (VNone))]
+                [(equal? 2 (length ret)) (hash-ref (VDict-hashes contents) (first ret) (second ret))]
+                [else (VNone)])))
 
 ;tell if the item is iterable
 (define (is-iterable it)
@@ -587,15 +600,16 @@
   (m-return (VBool 1)))
 
 ;get hash values
-(define-primf (value (d VDict?))
-  (m-return (VList (hash-values (VDict-hashes d)))))
-
+(define-primf (value (d VDictM?))
+  (m-do ([contents (get-box (list (VDictM-b d)))])
+        (VList (hash-values (VDict-hashes contents)))))
 ;get hash keys
-(define-primf (keys (d VDict?))
-  (m-return (VList (hash-keys (VDict-hashes d)))))
+(define-primf (keys (d VDictM?))
+  (m-do ([contents (get-box (list (VDictM-b d)))])
+        (VList (hash-keys (VDict-hashes contents)))))
 
-(define-primf (clear (d VDict?))
-  (m-return (VDict (hash empty))))
+(define-primf (clear (d VDictM?))
+  (set-box (list (VDictM-b d) (VDict (hash empty)))))
 
 ;constucting hash helper
 (define (lists2ltup l1 l2)
@@ -604,9 +618,9 @@
       (cons (VTuple (list (first l1) (first l2))) (lists2ltup (rest l1) (rest l2)))))
 
 ;get hash items
-(define-primf (items (d VDict?))
-  (m-return (VList (lists2ltup (hash-keys (VDict-hashes d)) (hash-values (VDict-hashes d))))))
-
+(define-primf (items (d VDictM?))
+  (m-do ([contents (get-box (list (VDictM-b d)))])
+         (VList (lists2ltup (hash-keys (VDict-hashes contents)) (hash-values (VDict-hashes contents))))))
 
 ;;finds the appropriate racket function for a given VPrimF symbol
 (define (python-prim op) : ((listof CVal) -> (PM CVal))
@@ -647,6 +661,7 @@
     [(keys) keys]
     [(items) items]
     [(clear) clear]
+    [(get) get]
     ))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -724,7 +739,7 @@
     [CFalse () (m-return (VBool 0))]
     [CNum (n) (m-return (VNum n))]
     [CStr (s) (m-return (VStr s))]
-    [CBox (v) (m-do ([val (m-interp v env)]
+    [CBox (v) (m-do ([val (m-interp v env)]; interps on v and adds to store
                      [loc (add-new-loc val)])
                     (VBox loc))]
     [CObj (d c)
@@ -837,6 +852,9 @@
                                       (m-interp v env))
                                     values)])
            (VDict (lists2hash k v (hash empty))))]
+    [CDictM (b) (m-do
+                 ([contents (m-interp b env)])
+            (VDictM contents))]
     ))
 
 (define (interp expr)

@@ -18,17 +18,25 @@ BUILTIN
 
 
 builtinto rackets hash
-clear
 in -> not in
 get
-
-straight forawrd
-items
-values
-keys
-set/set()
 
 other
 & | ^ -
 update (= replace)
 indexing (d[a])
+
+ASSERTS
+assertIs
+assertisnot
+
+assertequal
+
+assertraises
+assertTrue
+AssertFalse
+
+
+AssertNotIn
+assertIn
+
