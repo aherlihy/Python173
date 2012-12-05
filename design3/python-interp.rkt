@@ -786,8 +786,7 @@
                               )]
     [CError (val)
             (m-bind (m-interp val env) pm-error)]
-    ;;[else (error 'm-interp (string-append "not implemented: "
-    ;;                                      (to-string expr)))]
+
     [CList (elts) (m-do ([contents (m-map (lambda (v)
                                       (m-interp v env))
                                     elts)])
