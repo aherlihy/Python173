@@ -92,7 +92,7 @@
     ;;                                     (to-string exp)))]
     [PyExcept (type body) (error 'desugar "Misplaced handler type \n")]
     [PyList (elts) (CList (map desugar-inner elts))]
-    [PyDict (keys values) (CDict (map desugar-inner keys) (map desugar-inner values))]
+    [PyDict (keys values) (CDictM (CBox (CDict (map desugar-inner keys) (map desugar-inner values))))]
     ))
 
 

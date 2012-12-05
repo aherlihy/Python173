@@ -30,7 +30,7 @@ structure that you define in python-syntax.rkt
                     ('attr func)
                     ('value v)) 
                (PyApp (PyId (string->symbol func))
-               (list (get-structured-python v))
+               (cons (get-structured-python v) (map get-structured-python args-list))
                (if (equal? starargs #\nul)
                    (PyTuple empty)
                    (get-structured-python starargs)))]

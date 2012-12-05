@@ -261,6 +261,7 @@ that calls the primitive `print`.
 (define lib-binds;put all default vals/keywords
   (list
    (values 'print (CPrimF 'print))
+   (values 'get (CPrimF 'get))
    (values 'LIST (CPrimF 'list-f))
    (values 'set (CPrimF 'list-f))
    (values 'items (CPrimF 'items))

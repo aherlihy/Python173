@@ -31,6 +31,7 @@
   [CTryExcp (try :  CExp) (name : string) (except : CExp) (e : CExp)]
   [CList (elts : (listof CExp))]
   [CDict (keys : (listof CExp)) (values : (listof CExp))]
+  [CDictM (box : CExp)]
   [CError (val : CExp)])
 
 (define-type CVal
@@ -45,6 +46,7 @@
   [VTuple (l : (listof CVal))]
   [VList (elts : (listof CVal))]
   [VDict (hashes : (hashof CVal CVal))]
+  [VDictM (b : CVal)]
   ;;[VList (l : Location)] ;; implement using __getattr__ + delegation
   ;;[VDict (l : Location)] ;; implement using __getattr__ + delegation
   [VClosure (env : Env) (args : (listof symbol)) (vararg : (optionof symbol)) (body : CExp)]
