@@ -44,6 +44,7 @@
   [VPrimMap (m : (hashof CVal CVal))]
   [VTuple (l : (listof CVal))]
   [VList (elts : (listof CVal))]
+  [VDict (hashes : (hashof CVal CVal))]
   ;;[VList (l : Location)] ;; implement using __getattr__ + delegation
   ;;[VDict (l : Location)] ;; implement using __getattr__ + delegation
   [VClosure (env : Env) (args : (listof symbol)) (vararg : (optionof symbol)) (body : CExp)]

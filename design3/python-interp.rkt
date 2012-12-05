@@ -13,7 +13,10 @@
 (require (typed-in racket [string->number : (string -> number)]))
 (require (typed-in racket [regexp-split : (string string -> (listof string))]))
 (require (typed-in racket [remove* : ((listof string) (listof string) -> (listof string))]))
+(require (typed-in racket [hash-values : ((hashof 'a 'b) -> (listof 'b))]))
+(require (typed-in racket [hash-keys : ((hashof 'a 'b) -> (listof 'a))]))
 (require (typed-in racket [string-split : (string -> (listof string))]))
+(require (typed-in racket [hash->list : ((hashof 'a 'a) -> (listof (listof 'a)))]))
 
 ;;note: interp and primitives need to be mutually recursive -- primops
 ;;need to lookup and apply underscore members (ie + calls __plus__),
@@ -93,7 +96,8 @@
     [VPrimMap (m) (interp-error "prim maps don't have a class")]
     [VClosure (e a v b) (get-global "func-type")]
     [VTuple (l) (get-global "tuple-type")]
-    [VList (elts) (get-global "list-type")]))
+    [VList (elts) (get-global "list-type")]
+    [VDict (h) (get-global "dict-type")]))
 
 ;;get the dict out of obj
 (define (dict (obj : CVal)) : (PM CVal)
@@ -214,7 +218,7 @@
                                       (first rvals)
                                       (rest rvals))
                                ")"))]))]
-        [VList (l) (m-do ([vals (m-map pretty l)]
+    [VList (l) (m-do ([vals (m-map pretty l)]
                        [rvals (m-return (reverse vals))])
                       (cond
                        [(empty? rvals) "[]"]
@@ -232,6 +236,7 @@
                                       (first rvals)
                                       (rest rvals))
                                "]"))]))]
+    [VDict (h) (pretty (VList (foldr cons (hash-values h) (hash-keys h))))]
     [VObj (c dict)
           (m-do ([c (get-box (list c))]
                  [c-s (pretty c)]
@@ -581,6 +586,28 @@
 (define-primf (bool val)
   (m-return (VBool 1)))
 
+;get hash values
+(define-primf (value (d VDict?))
+  (m-return (VList (hash-values (VDict-hashes d)))))
+
+;get hash keys
+(define-primf (keys (d VDict?))
+  (m-return (VList (hash-keys (VDict-hashes d)))))
+
+(define-primf (clear (d VDict?))
+  (m-return (VDict (hash empty))))
+
+;constucting hash helper
+(define (lists2ltup l1 l2)
+  (if (empty? l1)
+      (list)
+      (cons (VTuple (list (first l1) (first l2))) (lists2ltup (rest l1) (rest l2)))))
+
+;get hash items
+(define-primf (items (d VDict?))
+  (m-return (VList (lists2ltup (hash-keys (VDict-hashes d)) (hash-values (VDict-hashes d))))))
+
+
 ;;finds the appropriate racket function for a given VPrimF symbol
 (define (python-prim op) : ((listof CVal) -> (PM CVal))
   (case op
@@ -613,10 +640,13 @@
     [(tuple-mult) tuple-mult]
     [(tuple-length) tuple-length]
     [(list-length) list-length]
-
     [(gen-length) gen-length]
     [(list-append) list-append]
     [(list-mult) list-mult]
+    [(value) value]
+    [(keys) keys]
+    [(items) items]
+    [(clear) clear]
     ))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -637,6 +667,14 @@
   (cond [(empty? lst) empty]
         [(= n 0) lst]
         [else (drop (- n 1) (rest lst))]))
+
+;constucting hash helper
+(define (lists2hash l1 l2 h)
+  (if (empty? l1)
+      h
+      (let ((h2 (hash-set h (first l1) (first l2))))
+        (lists2hash (rest l1) (rest l2) h2))))
+
 
 ;;applies funct to args and varargs
 (define (apply-func (func : CVal) (args : (listof CVal)) (varargs : CVal)) : (PM CVal)
@@ -791,6 +829,14 @@
                                       (m-interp v env))
                                     elts)])
                   (VList contents))]
+    [CDict (keys values) 
+           (m-do ([k (m-map (lambda (v)
+                                      (m-interp v env))
+                                    keys)] ;;m-do interprets shit and deals with the store, then stores the result in variables k and v
+                  [v (m-map (lambda (v)
+                                      (m-interp v env))
+                                    values)])
+           (VDict (lists2hash k v (hash empty))))]
     ))
 
 (define (interp expr)

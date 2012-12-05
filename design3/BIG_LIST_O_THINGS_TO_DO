@@ -6,6 +6,29 @@ Built in funcs
 functions, i.e. recursive
 
 KNOW TO NEED DO
-- convert to bool
+- bool
 - asserts
-- is not
+
+TODO today
+dict
+loops -> if we need to?
+
+BUILTIN
+
+
+
+builtinto rackets hash
+clear
+in -> not in
+get
+
+straight forawrd
+items
+values
+keys
+set/set()
+
+other
+& | ^ -
+update (= replace)
+indexing (d[a])

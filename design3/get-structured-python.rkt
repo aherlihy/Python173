@@ -24,20 +24,27 @@ structure that you define in python-syntax.rkt
                  ('starargs starargs)
                  ('args args-list)
                  ('func func-expr))
-     (PyApp (get-structured-python func-expr)
-            (map get-structured-python args-list)
-            (if (equal? starargs #\nul)
-                (PyTuple empty)
-                (get-structured-python starargs)))]
+     (match func-expr
+       [(hash-table ('nodetype "Attribute")
+                    ('ctx c)
+                    ('attr func)
+                    ('value v)) 
+               (PyApp (PyId (string->symbol func))
+               (list (get-structured-python v))
+               (if (equal? starargs #\nul)
+                   (PyTuple empty)
+                   (get-structured-python starargs)))]
+       [_ (PyApp (get-structured-python func-expr)
+                 (map get-structured-python args-list)
+                 (if (equal? starargs #\nul)
+                     (PyTuple empty)
+                     (get-structured-python starargs)))])]
     [(hash-table ('nodetype "Name")
                  ('ctx (hash-table ('nodetype "Load")))
                  ('id id))
-     (begin (display "name: ")
-            (display id)
-            (display "\n")
             (if (string=? id "list") 
                 (PyId (string->symbol "LIST"))
-                (PyId (string->symbol id))))];I HAVE NO IDEA WHY THIS WORKS
+                (PyId (string->symbol id)))];I HAVE NO IDEA WHY THIS WORKS
     [(hash-table ('nodetype "Assign")
                  ('targets vars)
                  ('value value))

@@ -197,7 +197,16 @@ that calls the primitive `print`.
                          (CPrimF 'is))))
 
 (make-type tuple-type
-           (list (values "__len__"
+           (list (values "__bool__"
+                         (CFunc (list 'this)
+                                (none)
+                                (CIf (CApp (CPrimF 'equal)
+                                           (list (CId 'this)
+                                                 (CTuple (list)))
+                                           (CTuple empty))
+                                     (CReturn (CFalse))
+                                     (CReturn (CTrue)))))
+                 (values "__len__"
                          (CPrimF 'tuple-length))
                  (values "__add__"
                          (CPrimF 'tuple-append))
@@ -209,7 +218,16 @@ that calls the primitive `print`.
                          (CPrimF 'is))
                  ))
 (make-type list-type
-           (list (values "__len__"
+           (list (values "__bool__"
+                         (CFunc (list 'this)
+                                (none)
+                                (CIf (CApp (CPrimF 'equal)
+                                           (list (CId 'this)
+                                                 (CList (list)))
+                                           (CTuple empty))
+                                     (CReturn (CFalse))
+                                     (CReturn (CTrue)))))
+                 (values "__len__"
                          (CPrimF 'list-length))
                  (values "__add__"
                          (CPrimF 'list-append))
@@ -220,7 +238,16 @@ that calls the primitive `print`.
                  (values "is"
                          (CPrimF 'is))))
 (make-type dict-type
-         (list (values "__len__"
+         (list (values "__bool__"
+                         (CFunc (list 'this)
+                                (none)
+                                (CIf (CApp (CPrimF 'equal)
+                                           (list (CId 'this)
+                                                 (CDict (list) (list)))
+                                           (CTuple empty))
+                                     (CReturn (CFalse))
+                                     (CReturn (CTrue)))))
+               (values "__len__"
                          (CPrimF 'list-length))
                  (values "__add__"
                          (CPrimF 'list-append))
@@ -235,6 +262,11 @@ that calls the primitive `print`.
   (list
    (values 'print (CPrimF 'print))
    (values 'LIST (CPrimF 'list-f))
+   (values 'set (CPrimF 'list-f))
+   (values 'items (CPrimF 'items))
+   (values 'clear (CPrimF 'clear))
+   (values 'values (CPrimF 'value))
+   (values 'keys (CPrimF 'keys))
    (values 'len (CPrimF 'gen-length))
    (values 'True (CTrue))
    (values 'False (CFalse))
