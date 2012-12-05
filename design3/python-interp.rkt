@@ -595,7 +595,7 @@
   (m-return (VList (hash-keys (VDict-hashes d)))))
 
 (define-primf (clear (d VDict?))
-  (m-return (VDict (hash empty))))
+  (m-return (VList (hash-keys (VDict-hashes d)))))
 
 ;constucting hash helper
 (define (lists2ltup l1 l2)
