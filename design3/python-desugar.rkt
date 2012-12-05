@@ -72,7 +72,8 @@
             [(LtE) (desugar-inner (PyOp 'Not (list (PyOp 'Gt args))))]
             [(Eq) (binop "=" (first args) (second args))]
             [(NotEq) (desugar-inner (PyOp 'Not (list (PyOp 'Eq args))))]
-            [(Is) (binop "is" (first args) (second args))]           
+            [(Is) (binop "is" (first args) (second args))] 
+            [(IsNot) (desugar-inner (PyOp 'Not (list (PyOp 'Is args))))]
             [else (CApp (CPrimF id);~why desugar if not add/sub/etc?
                         (map desugar-inner args)
                         (CTuple empty))])]
