@@ -1,0 +1,19 @@
+user break
+  context...:
+   /home/aherlihy/.racket/5.3/collects/plai-typed/types.rkt:412:2: loop
+   try-next
+   try-next
+   /home/aherlihy/.racket/5.3/collects/plai-typed/main.rkt:1540:13: typecheck
+   /home/aherlihy/.racket/5.3/collects/plai-typed/main.rkt:1136:0: typecheck-defns
+   /home/aherlihy/.racket/5.3/collects/plai-typed/main.rkt:1540:13: typecheck
+   /home/aherlihy/.racket/5.3/collects/plai-typed/main.rkt:1540:13: typecheck
+   /home/aherlihy/.racket/5.3/collects/plai-typed/main.rkt:1540:13: typecheck
+   /home/aherlihy/.racket/5.3/collects/plai-typed/main.rkt:1540:13: typecheck
+   /home/aherlihy/.racket/5.3/collects/plai-typed/main.rkt:1540:13: typecheck
+   /pro/plt/software/racket/5.3/i686/collects/racket/private/map.rkt:26:19: loop
+   /pro/plt/software/racket/5.3/i686/collects/racket/private/map.rkt:26:19: loop
+   /pro/plt/software/racket/5.3/i686/collects/racket/private/map.rkt:26:19: loop
+   /pro/plt/software/racket/5.3/i686/collects/racket/private/map.rkt:26:19: loop
+   /pro/plt/software/racket/5.3/i686/collects/racket/private/map.rkt:26:19: loop
+   /pro/plt/software/racket/5.3/i686/collects/racket/private/map.rkt:26:19: loop...
+

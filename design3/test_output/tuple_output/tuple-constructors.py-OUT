@@ -1,0 +1,13 @@
+parse: Haven't handled a case yet:
+#hasheq((nodetype . "List") (ctx . #hasheq((nodetype . "Load"))) (elts . ()))
+  context...:
+   /pro/plt/software/racket/5.3/i686/collects/racket/private/map.rkt:21:13: map
+   parse-loop956
+   /pro/plt/software/racket/5.3/i686/collects/racket/private/map.rkt:21:13: map
+   parse-loop956
+   /pro/plt/software/racket/5.3/i686/collects/racket/private/map.rkt:26:19: loop
+   /pro/plt/software/racket/5.3/i686/collects/racket/private/map.rkt:26:19: loop
+   /pro/plt/software/racket/5.3/i686/collects/racket/private/map.rkt:26:19: loop
+   parse-loop1028
+   /pro/plt/software/racket/5.3/i686/collects/racket/cmdline.rkt:470:12: loop
+   /gpfs/main/home/aherlihy/course/cs173/python/Python173/design3/python-main.rkt: [running body]
