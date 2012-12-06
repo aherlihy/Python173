@@ -63,6 +63,9 @@
             [(Mult) (binop "__mult__" (first args) (second args))];(11/4)
             [(Div) (binop "__div__" (first args) (second args))];(11/4)
             [(USub) (unop "__neg__" (first args))]
+            [(BitAnd) (binop "__bitand__" (first args) (second args))]
+            [(BitOr) (binop "__bitor__" (first args) (second args))]
+            [(BitXor) (binop "__bitxor__" (first args) (second args))]
             [(And) (if (= 1 (length args)) (desugar-inner(first args)) (desugar-inner (PyIf (first args) (PyOp id (rest args)) (first args))))];NOTE need to desugar numbers into booleans for numbers to work
             [(Or) (if (= 1 (length args)) (desugar-inner(first args)) (desugar-inner (PyIf (first args) (first args) (PyOp id (rest args)) )))]
             [(Not) (desugar-inner (PyIf (first args) (PyId 'False) (PyId 'True)))]
@@ -74,6 +77,9 @@
             [(NotEq) (desugar-inner (PyOp 'Not (list (PyOp 'Eq args))))]
             [(Is) (binop "is" (first args) (second args))]   
             [(IsNot) (desugar-inner (PyOp 'Not (list (PyOp 'Is args))))]
+            [(In) (binop "in" (second args) (first args))]
+            [(NotIn) (desugar-inner (PyOp 'Not (list (PyOp 'In args))))]
+            [(del) (binop "del" (first args) (second args))]
             [else (CApp (CPrimF id);~why desugar if not add/sub/etc?
                         (map desugar-inner args)
                         (CTuple empty))])]
@@ -93,6 +99,9 @@
     [PyExcept (type body) (error 'desugar "Misplaced handler type \n")]
     [PyList (elts) (CList (map desugar-inner elts))]
     [PyDict (keys values) (CDictM (CBox (CDict (map desugar-inner keys) (map desugar-inner values))))]
+    [PyDictLoad (dict key) (CDictLoad (desugar-inner dict) (desugar-inner key))]
+    [PyDictStore (dict key) (CDictStore (desugar-inner dict) (desugar-inner key))]
+    [PyAssign (to from) (CAssign (desugar-inner to) (desugar-inner from))]
     ))
 
 

@@ -1,4 +1,5 @@
-a = {'a':1, 'b':2}
-print(a)
-a.clear()
-print(a)
+x=1
+if x:
+	print("true")
+else:
+	print("false")

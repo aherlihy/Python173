@@ -12,12 +12,32 @@ that calls the primitive `print`.
 
 |#
 
-(define assert-true
+(define assert-false
   (CFunc (list 'f)
          (none)
-         (CIf (CId 'f)
+         (CIf (CApp (CApp (CPrimF 'class-lookup)
+                          (list (CId 'f)
+                                (CStr "__bool__"))
+                          (CTuple empty))
+                    empty
+                    (CTuple empty))
+              (CError (CStr "assertion failed"))
               (CNone)
-              (CError (CStr "assertion failed")))))
+              )))
+
+     
+(define assert-true
+  (begin (display "assert-true in lib")(CFunc (list 'f)
+         (none)
+         (CIf (CApp (CApp (CPrimF 'class-lookup)
+                          (list (CId 'f)
+                                (CStr "__bool__"))
+                          (CTuple empty))
+                    empty
+                    (CTuple empty))
+              (CNone)
+              (CError (CStr "assertion failed"))))))
+
 (define assert-equal
   (CFunc (list 'a 'b)
          (none)
@@ -36,6 +56,36 @@ that calls the primitive `print`.
                     (CTuple empty))
               (CError (CStr "assertion failed"))
               (CNone))))
+(define assert-not-is
+    (CFunc (list 'a 'b)
+         (none)
+         (CIf (CApp (CPrimF 'is)
+                    (list (CId 'a)
+                          (CId 'b))
+                    (CTuple empty))
+              (CError (CStr "assertion failed"))
+              (CNone))))
+(define assert-is
+  (CFunc (list 'a 'b)
+         (none)
+         (CIf (CApp (CPrimF 'is)
+                    (list (CId 'a)
+                          (CId 'b))
+                    (CTuple empty))
+              (CNone)
+              (CError (CStr "assertion failed")))))
+(define assert-raises
+  (begin 
+         (display "assertR in lib") 
+         (CFunc (list 'a 'b 'c)
+                (none)
+                (CIf (CApp (CPrimF 'asst-raises)
+                           (list (CStr (symbol->string 'a))
+                                 (CStr (symbol->string  'b)))
+                           (CTuple empty))
+                     (CNone)
+                     (CError (CStr "assertion failed"))))))
+
   
 (define partial-apply
   (CAddGlobal;create global scope
@@ -160,6 +210,8 @@ that calls the primitive `print`.
                          (CPrimF 'str-gte))   
                  (values "="
                          (CPrimF 'str-eq)) 
+                 (values "in"
+                         (CPrimF 'in))
                  (values "is"
                          (CPrimF 'is))));(11/15)now basically everything-mult
 
@@ -233,11 +285,18 @@ that calls the primitive `print`.
                          (CPrimF 'list-append))
                  (values "__mult__"
                          (CPrimF 'list-mult))
+                 (values "__bitand__"
+                         (CPrimF 'bit-and))
+                 (values "__bitor__"
+                         (CPrimF 'bit-or))
+                 (values "__bitxor__"
+                         (CPrimF 'bit-xor))
                  (values "="
                          (CPrimF 'equal))
                  (values "is"
-                         (CPrimF 'is))))
-(make-type dict-type
+                         (CPrimF 'is))
+                 ))
+(make-type mutable-dict-type
          (list (values "__bool__"
                          (CFunc (list 'this)
                                 (none)
@@ -245,8 +304,8 @@ that calls the primitive `print`.
                                            (list (CId 'this)
                                                  (CDict (list) (list)))
                                            (CTuple empty))
-                                     (CReturn (CFalse))
-                                     (CReturn (CTrue)))))
+                                     (CReturn (CTrue))
+                                     (CReturn (CFalse)))))
                (values "__len__"
                          (CPrimF 'list-length))
                  (values "__add__"
@@ -255,6 +314,10 @@ that calls the primitive `print`.
                          (CPrimF 'list-mult))
                  (values "="
                          (CPrimF 'equal))
+                 (values "in"
+                         (CPrimF 'in))
+                 (values "del"
+                         (CPrimF 'del))
                  (values "is"
                          (CPrimF 'is))))  
 
@@ -267,23 +330,27 @@ that calls the primitive `print`.
    (values 'items (CPrimF 'items))
    (values 'clear (CPrimF 'clear))
    (values 'values (CPrimF 'value))
+   (values 'update (CPrimF 'update))
    (values 'keys (CPrimF 'keys))
    (values 'len (CPrimF 'gen-length))
    (values 'True (CTrue))
    (values 'False (CFalse))
    (values 'None (CNone))
+   (values '___assertRaises assert-raises)
    (values '___assertTrue assert-true)
+   (values '___assertFalse assert-false)
    (values '___assertEqual assert-equal)
-   (values '___assertIs assert-equal);hack for now, fix for later
-   (values '___assertIsNot assert-not-equal);also hack
+   (values '___assertNotEqual assert-not-equal)
+   (values '___assertIs assert-is);hack for now, fix for later
+   (values '___assertIsNot assert-not-is)
+
    (values 'type class-type)
    (values 'bool bool-type)
    (values 'int num-type)
    (values 'string str-type)
    (values 'tuple tuple-type)
    (values 'list list-type)
-   (values 'dict dict-type)
-   (values 'bool (CPrimF 'bool))
+   (values 'dict mutable-dict-type)
    (values 'int (CPrimF 'int))
    (values 'float (CPrimF 'float))
    (values 'object obj-type)))

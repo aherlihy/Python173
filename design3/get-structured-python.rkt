@@ -48,8 +48,14 @@ structure that you define in python-syntax.rkt
     [(hash-table ('nodetype "Assign")
                  ('targets vars)
                  ('value value))
-     (PySet! (get-structured-python (first vars))
-             (get-structured-python value))]
+     (match (first vars)
+       [(hash-table ('nodetype "Name")
+                    ('ctx c)
+                    ('id id))
+                    (PySet! (get-structured-python (first vars))
+                            (get-structured-python value))]
+       [_ (PyAssign (get-structured-python (first vars))
+                            (get-structured-python value))])]
     [(hash-table ('nodetype "AugAssign")
                  ('target var)
                  ('value value)
@@ -202,6 +208,28 @@ structure that you define in python-syntax.rkt
                  ('values values))
      (PyDict
       (map get-structured-python keys) (map get-structured-python values))]
+    
+    [(hash-table ('nodetype "Subscript")
+                  ('slice slice)
+                  ('ctx c)
+                  ('value dict))
+      (match slice
+        [(hash-table ('nodetype "Index")
+                     ('value arg))
+         
+           (match c
+               [(hash-table ('nodetype "Store")) (PyDictStore (get-structured-python dict) (get-structured-python arg))]
+               [(hash-table ('nodetype "Load"))  (PyDictLoad (get-structured-python dict) (get-structured-python arg))];dict + suc
+               [(hash-table ('nodetype "Del")) (PyOp (string->symbol "del") (list (get-structured-python dict) (get-structured-python arg)))]
+               [_ (error 'parse (string-append "Haven't nonstore/load thing:\n"
+                                (format "~s" pyjson)))])]
+        [_ (error 'parse (string-append "Haven't handled slicing:\n"
+                                (format "~s" pyjson)))])]
+    [(hash-table ('nodetype "Delete")
+                 ('targets target))
+     (get-structured-python (first target))]
+     
+     
     [_ (error 'parse (string-append "Haven't handled a case yet:\n"
                                     (format "~s" pyjson)))]))
 

@@ -32,6 +32,9 @@
   [CList (elts : (listof CExp))]
   [CDict (keys : (listof CExp)) (values : (listof CExp))]
   [CDictM (box : CExp)]
+  [CDictLoad (dict : CExp) (key : CExp)]
+  [CDictStore (dict : CExp) (key : CExp)]
+  [CAssign (to : CExp) (from : CExp)]
   [CError (val : CExp)])
 
 (define-type CVal

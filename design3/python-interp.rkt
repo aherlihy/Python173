@@ -12,12 +12,14 @@
 (require (typed-in racket [string>=? : (string string -> boolean)]))
 (require (typed-in racket [string->number : (string -> number)]))
 (require (typed-in racket [regexp-split : (string string -> (listof string))]))
-(require (typed-in racket [remove* : ((listof string) (listof string) -> (listof string))]))
+(require (typed-in racket [remove* : ((listof 'a) (listof 'a) -> (listof 'a))]))
+(require (typed-in racket [remove : ('a (listof 'a) -> (listof 'a))]))
 (require (typed-in racket [hash-values : ((hashof 'a 'b) -> (listof 'b))]))
 (require (typed-in racket [hash-keys : ((hashof 'a 'b) -> (listof 'a))]))
 (require (typed-in racket [string-split : (string -> (listof string))]))
 (require (typed-in racket [number->string : (number -> string)]))
 (require (typed-in racket [hash->list : ((hashof 'a 'a) -> (listof (listof 'a)))]))
+(require (typed-in racket [remove-duplicates : ((listof 'a) -> (listof 'a))]))
 
 ;;note: interp and primitives need to be mutually recursive -- primops
 ;;need to lookup and apply underscore members (ie + calls __plus__),
@@ -36,8 +38,7 @@
 ;;assume they are correct
 
 
-(define is_try false) ; determine return value for exceptions
-(define last_raise (CRaise "No Previous Raise" (list))) ; keep track of prev raise for re-raises
+(define last_raise (CRaise "RuntimeError" (list))) ; keep track of prev raise for re-raises
 
 ;;helper macro for (define-primf)
 (define-syntax prim-bind
@@ -285,13 +286,38 @@
                      (print rest)))])))
 
 ;get item from hashmap
-;;WILL DO TOMORROW
 (define-primf (get val & ret);first val is attr, ret is a list of actual args
     (m-do ([contents (get-box (list (VDictM-b val)))])
-          (cond
-                [(equal? 1 (length ret)) (hash-ref (VDict-hashes contents) (first ret) (VNone))]
-                [(equal? 2 (length ret)) (hash-ref (VDict-hashes contents) (first ret) (second ret))]
-                [else (VNone)])))
+          (type-case (optionof CVal) (hash-ref (VDict-hashes contents) (first ret))
+            [some (v) v]
+            [none () (cond
+                       [(equal? 1 (length ret)) (VNone)]
+                       [(equal? 2 (length ret)) (second ret)]
+                       [else (error 'interp "TypeError")])])))
+
+;remove item from hashmap
+(define-primf (del dict key);VDict, CVal (key)
+      (m-do ([contents (get-box (list (VDictM-b dict)))];contents is VDict
+             [newDict (set-box (list (VDictM-b dict) (VDict (hash-remove (VDict-hashes contents) key))))])
+             (VNone)))
+
+; update hashmap
+(define-primf (update d & args)
+      (m-do ([contents (get-box (list (VDictM-b (first args))))]
+             [toret (set-box (list (VDictM-b d) contents))])
+             (VNone)))
+           
+
+;if item is in hashmap OR string is substring
+(define-primf (in dict val);first val is attr, ret is a list of actual args
+  (type-case CVal dict 
+    [VDictM (box)
+            (m-do ([contents (get-box (list box))])
+                  (type-case (optionof CVal) (hash-ref (VDict-hashes contents) val)
+                    [some (v) (VBool 1)]
+                    [none () (VBool 0)]))]
+    [VStr (s) (interp-error "need to handle string in")]
+    [else (interp-error "in need to take iterable")]))
 
 ;tell if the item is iterable
 (define (is-iterable it)
@@ -315,10 +341,10 @@
 
 ;;checks whether the 2 arguments are equal
 (define-primf (equal left right)
-  (if (equal? left
+  (begin (display "in equal") (if (equal? left
               right)
       (m-return (VBool 1))
-      (m-return (VBool 0))))
+      (m-return (VBool 0)))))
 
 (define-primf (is left right)
   (m-return (if (eqv? left right)
@@ -562,19 +588,45 @@
    (VList
      (list-mult-helper empty (VList-elts t) (VNum-n n)))))
      ;;(not strictly neccessary)
+
 (define (list-mult-helper start t n)
   (if (>= 0 n)
       start
       (list-mult-helper (append start t) t (- n 1))))
+
 (define-primf (gen-length t)
   (type-case CVal t
     [VTuple (l)  (m-return (VNum (length l)))]
     [VList (l) (m-return (VNum (length l)))]
     [else (interp-error "undefined operand for len")]))
 
+;;bitwise list functions
+(define-primf (bit-and (t VList?) (t2 VList?))
+  (m-return
+   ;(VList (remove* (remove-duplicates (append (VList-elts t) (VList-elts t2))) (append (VList-elts t) (VList-elts t2))))))
+   (VList (foldr 
+           (lambda (m l1) (remove m l1))     
+               (append (VList-elts t) (VList-elts t2))
+               (remove-duplicates (append (VList-elts t) (VList-elts t2)))
+               ))))
+
+(define-primf (bit-or (t VList?) (t2 VList?))
+  (m-return
+   (VList (remove-duplicates (append (VList-elts t) (VList-elts t2))))))
+
+(define-primf (bit-xor (t VList?) (t2 VList?))
+  (m-return
+   (VList (remove* 
+           (foldr 
+            (lambda (m l1) (remove m l1)) 
+               (append (VList-elts t) (VList-elts t2))
+               (remove-duplicates (append (VList-elts t) (VList-elts t2))))
+           (append (VList-elts t) (VList-elts t2))))))
+                   
 ;;finds the length of a tuple
 (define-primf (tuple-length (t VTuple?))
   (m-return (VNum (length (VTuple-l t)))))
+                   
 ;length of a list
 (define-primf (list-length (t VList?))
   (m-return (VNum (length (VList-elts t)))))
@@ -622,6 +674,9 @@
   (m-do ([contents (get-box (list (VDictM-b d)))])
          (VList (lists2ltup (hash-keys (VDict-hashes contents)) (hash-values (VDict-hashes contents))))))
 
+(define-primf (asst-raises val & ret)
+  (begin (display "asst-raises interp") (m-return (VBool 1))))
+  
 ;;finds the appropriate racket function for a given VPrimF symbol
 (define (python-prim op) : ((listof CVal) -> (PM CVal))
   (case op
@@ -657,17 +712,24 @@
     [(gen-length) gen-length]
     [(list-append) list-append]
     [(list-mult) list-mult]
+    [(bit-and) bit-and]
+    [(bit-or) bit-or]
+    [(bit-xor) bit-xor]
     [(value) value]
     [(keys) keys]
     [(items) items]
     [(clear) clear]
+    [(in) in]
     [(get) get]
+    [(update) update]
+    [(del) del]
+    [(asst-raises) asst-raises]
     ))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;            interp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
+  
 ;;returns the first n elements in lst
 (define (take n lst)
   (cond
@@ -810,8 +872,8 @@
     [CIf (test t e)
          (m-do ([test-v (m-interp test env)]
                 [(if (equal? test-v (VBool 0))
-                     (m-interp e env)
-                     (m-interp t env))]))]
+                     (begin (display "CIf is true in interp \n")(m-interp e env))
+                     (begin (display "CIf is false in interp \n")(m-interp t env)))]))]
     [CRaise (type msg)
               (if (string=? type "ReRaise")
                 (m-interp last_raise env)
@@ -855,6 +917,26 @@
     [CDictM (b) (m-do
                  ([contents (m-interp b env)])
             (VDictM contents))]
+    [CDictLoad (dict key) 
+               (m-do ([d (m-interp dict env)]
+                      [contents (get-box (list (VDictM-b d)))]
+                      [k (m-interp key env)])
+                     (type-case (optionof CVal) (hash-ref (VDict-hashes contents) k)
+                       [some (v) v]
+                       [none () (VNone)]))]
+    [CDictStore (dict key) (m-interp dict env)];;temp
+    [CAssign (to from) 
+             (m-do ([d (type-case CExp to
+                         [CDictStore (dict key) (m-interp dict env)]
+                         [else (error 'interp "Invalid assignment type")])]
+                    [k (type-case CExp to
+                         [CDictStore (dict key) (m-interp key env)]
+                         [else (error 'interp "Invalid assignment type. Also, how the fuck did you get here?")])]
+                    [contents (get-box (list (VDictM-b d)))]
+                    [v (m-interp from env)]
+                    [newDict (set-box (list (VDictM-b d) (VDict (hash-set (VDict-hashes contents) k v))))])
+                   (VNone))]
+                   
     ))
 
 (define (interp expr)
