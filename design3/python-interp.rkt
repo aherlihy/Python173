@@ -20,6 +20,7 @@
 (require (typed-in racket [number->string : (number -> string)]))
 (require (typed-in racket [hash->list : ((hashof 'a 'a) -> (listof (listof 'a)))]))
 (require (typed-in racket [remove-duplicates : ((listof 'a) -> (listof 'a))]))
+(require (typed-in racket [abs : (number -> number)]))
 
 ;;note: interp and primitives need to be mutually recursive -- primops
 ;;need to lookup and apply underscore members (ie + calls __plus__),
@@ -328,6 +329,7 @@
                     [some (v) (VBool 1)]
                     [none () (VBool 0)]))]
     [VStr (s) (interp-error "need to handle string in")]
+    [VList (l) (if (member val l) (m-return (VBool 1)) (m-return (VBool 0)))]
     [else (interp-error "in need to take iterable")]))
 
 ;tell if the item is iterable
@@ -348,6 +350,7 @@
     [VTuple (l) (m-return (VList l))]
     [VList (l) (m-return (VList l))]
     [VStr (s) (m-return (VList (get-str-list s)))]
+    [VNum (n) (m-return (VList empty))]
     [else (interp-error "argument not iterable")]))
 
 ;;checks whether the 2 arguments are equal
@@ -366,8 +369,9 @@
       (m-return (VBool 1))
       (m-return (VBool 0)))]))
 
+
 (define-primf (is left right)
-  (m-return (if (eqv? left right)
+  (m-return (if (or (eqv? left right) (equal? left right))
                 (VBool 1)
                 (VBool 0))))
 
@@ -416,8 +420,30 @@
   (if (not (equal? +nan.0 L))
       (m-return (VNum (- 0 L)))
       (interp-error "unhandled operator for negate"))))
-  
 
+;;numeric plus-thing
+(define-primf (pls arg)
+    (let ((L (type-case 
+              CVal arg
+            [VBool (n) n]
+            [VNum (n) n]
+            [else +nan.0])))
+        
+  (if (not (equal? +nan.0 L))
+      (m-return (VNum (+ 0 L)))
+      (interp-error "unhandled operator for +"))))
+
+;;invert, so instead of 2s complement we're gonna subtract
+(define-primf (inv arg)
+    (let ((L (type-case 
+              CVal arg
+            [VBool (n) n]
+            [VNum (n) n]
+            [else +nan.0])))
+        
+  (if (not (equal? +nan.0 L))
+      (m-return (VNum (- 0 (+ 1 L))))
+      (interp-error "unhandled operator for +"))))
 ;;numeric division(11/14)
 (define-primf (div left right)
     (let ((L (type-case 
@@ -546,23 +572,24 @@
             (interp-error "unsupported operator for num-compare"))))
 ;num eq
 (define-primf (int-eq left right)
-        (let ((L (type-case 
-              CVal left
-            [VBool (n) n]
-            [VNum (n) n]
-            [VNone () -nan.0]
-            [else +nan.0]))
-        (R (type-case 
-              CVal right
-            [VBool (n) n]
-            [VNum (n) n]
-            [VNone () -nan.0]
-            [else +nan.0])))   
-        (if (or (equal? -nan.0 L) (equal? -nan.0 R))
-            (m-return (VBool 0))
-            (if (not (or (equal? +nan.0 L) (equal? +nan.0 R)))
-                (m-return (if (> L R) (VBool 1) (VBool 0)))
-                (interp-error "unsupported operator for num-compare")))))
+          (let ((L (type-case 
+                       CVal left
+                     [VBool (n) n]
+                     [VNum (n) n]
+                     [VNone () -nan.0]
+                     [else +nan.0]))
+                (R (type-case 
+                       CVal right
+                     [VBool (n) n]
+                     [VNum (n) n]
+                     [VNone () -nan.0]
+                     [else +nan.0])))
+            
+            (if (or (equal? -nan.0 L) (equal? -nan.0 R))
+                (m-return (VBool 0))
+                (if (not (or (equal? +nan.0 L) (equal? +nan.0 R)))
+                    (m-return (if (= L R) (VBool 1) (VBool 0)))
+                    (interp-error "unsupported operator for num-compare")))))
 
 ;;gets a value from a box
 (define-primf (get-box (box VBox?))
@@ -620,6 +647,16 @@
     [VList (l) (m-return (VNum (length l)))]
     [else (interp-error "undefined operand for len")]))
 
+(define-primf (absv v)
+  (type-case CVal v
+    [VNum (n) (m-return (VNum (abs n)))]
+    [VBool (n) (m-return (VNum (abs n)))]
+    [else (interp-error "undefined operand for abs")]))
+
+(define-primf (str v)
+  (type-case CVal v
+    [VBool (n) (if (= 1 n) (m-return (VStr "True")) (m-return (VStr "False")))]
+    [else (interp-error "undefined operand for str")]))
 ;;bitwise list functions
 (define-primf (bit-and (t VList?) (t2 VList?))
   (m-return
@@ -709,6 +746,8 @@
     [(int-add) add]
     [(int-sub) sub]
     [(int-neg) neg]
+    [(int-pls) pls]
+    [(int-inv) inv]
     [(int-mult) mult];(11/4)
     [(int-div) div];(11/4)
     [(int-gt) int-gt];(11/16)
@@ -745,6 +784,8 @@
     [(update) update]
     [(del) del]
     [(asst-raises) asst-raises]
+    [(absv) absv]
+    [(str) str]
     ))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

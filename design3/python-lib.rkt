@@ -86,22 +86,29 @@ that calls the primitive `print`.
                     (CTuple empty))
               (CNone)
               (CError (CStr "assertion failed")))))
+(define assert-in
+  (CFunc (list 'a 'b)
+         (none)
+         (CIf (CApp (CPrimF 'in)
+                    (list (CId 'b)
+                          (CId 'a))
+                    (CTuple empty))
+              (CNone)
+              (CError (CStr "assertion failed")))))
+(define assert-not-in
+  (CFunc (list 'a 'b)
+         (none)
+         (CIf (CApp (CPrimF 'in)
+                    (list (CId 'b)
+                          (CId 'a))
+                    (CTuple empty))
+              (CError (CStr "assertion failed"))
+              (CNone)
+              )))
 (define assert-raises
   ;(begin 
          ;(display "assertR in lib") 
-         (CFunc (list 'a 'b 'c) ;;unknown length of args
-                (none)
-                (CIf (CApp (CPrimF 'asst-raises)
-                           (list (CStr (symbol->string 'a))
-                                 (CStr (symbol->string  'b)))
-                           (CTuple empty))
-                     (CNone)
-                     (CError (CStr "assertion failed")))));)
-
-(define assert-raises
-  ;(begin 
-         ;(display "assertR in lib") 
-         (CFunc (list 'a 'b) ;;unknown length of args
+         (CFunc (list 'a 'b 'c) 
                 (none)
                 (CIf (CApp (CPrimF 'asst-raises)
                            (list (CStr (symbol->string 'a))
@@ -172,6 +179,10 @@ that calls the primitive `print`.
                          (CPrimF 'int-div))
                  (values "__neg__"
                          (CPrimF 'int-neg))
+                 (values "__pls__"
+                         (CPrimF 'int-pls))
+                 (values "__inv__"
+                         (CPrimF 'int-inv))
                  (values ">"
                          (CPrimF 'int-gt))
                  (values ">="
@@ -180,6 +191,8 @@ that calls the primitive `print`.
                          (CPrimF 'int-eq))
                  (values "is"
                          (CPrimF 'is))
+                 (values "absv"
+                         (CPrimF 'absv))
                  ))
 
 
@@ -203,6 +216,10 @@ that calls the primitive `print`.
                          (CPrimF 'int-div))
                  (values "__neg__"
                          (CPrimF 'int-neg))
+                 (values "__pls__"
+                         (CPrimF 'int-pls))
+                 (values "__inv__"
+                         (CPrimF 'int-inv))
                  (values ">"
                          (CPrimF 'int-gt))
                  (values ">="
@@ -211,6 +228,10 @@ that calls the primitive `print`.
                          (CPrimF 'int-eq))
                  (values "is"
                          (CPrimF 'is))
+                 (values "absv"
+                         (CPrimF 'absv))
+                 (values "str"
+                         (CPrimF 'str))
                  ))
 
 (make-type str-type
@@ -319,6 +340,8 @@ that calls the primitive `print`.
                          (CPrimF 'equal))
                  (values "is"
                          (CPrimF 'is))
+                 (values "in"
+                         (CPrimF 'in))
                  ))
 (make-type mutable-dict-type
         (list (values "__bool__"
@@ -362,7 +385,11 @@ that calls the primitive `print`.
    (values '___assertEqual assert-equal)
    (values '___assertNotEqual assert-not-equal)
    (values '___assertIs assert-is)
+   (values '___assertIn assert-in)
+   (values '___assertNotIn assert-not-in)
    (values '___assertIsNot assert-not-is)
+   (values 'abs (CPrimF 'absv))
+   (values 'str (CPrimF 'str))
    (values 'type class-type)
    (values 'bool bool-type)
    (values 'int num-type)

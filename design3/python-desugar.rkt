@@ -63,6 +63,8 @@
             [(Mult) (binop "__mult__" (first args) (second args))];(11/4)
             [(Div) (binop "__div__" (first args) (second args))];(11/4)
             [(USub) (unop "__neg__" (first args))]
+            [(Invert) (unop "__inv__" (first args))]
+            [(UAdd) (unop "__pls__" (first args))]
             [(BitAnd) (binop "__bitand__" (first args) (second args))]
             [(BitOr) (binop "__bitor__" (first args) (second args))]
             [(BitXor) (binop "__bitxor__" (first args) (second args))]

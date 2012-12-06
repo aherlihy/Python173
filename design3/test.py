@@ -1,4 +1,5 @@
-if {}:
-	print("true")
-else:
-	print("false")
+
+d = {}
+print(d == {})
+___assertEqual(d,{}) 
+
