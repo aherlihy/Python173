@@ -15,28 +15,26 @@ loops -> if we need to?
 
 BUILTIN
 
+dicts
+__getitem
 
-
-builtinto rackets hash
-in -> not in
-get
-
-other
-& | ^ -
-update (= replace)
-indexing (d[a])
 
 ASSERTS
-assertIs
-assertisnot
 
-assertequal
+done
+assertEqual -> assertNotEqual
+assertIs -> assertIsNot
 
-assertraises
-assertTrue
-AssertFalse
+todo
 
 
-AssertNotIn
-assertIn
+assertTrue -> assertFalse
 
+assertIn -> assertNotIn
+
+assertRaises
+___fail
+
+misc
+except RuntimeError as e:
+'in' for strings

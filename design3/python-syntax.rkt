@@ -19,6 +19,9 @@
   [PyExcept (type : PyExp) (body : PyExp)]
   [PyList (elts : (listof PyExp))]
   [PyDict (keys : (listof PyExp)) (values : (listof PyExp))]
+  [PyAssign (to : PyExp) (from : PyExp)]
+  [PyDictLoad (dict : PyExp) (ind : PyExp)]
+  [PyDictStore (dict : PyExp) (ind : PyExp)]
   [PyPass])
 
 (define someF some)
