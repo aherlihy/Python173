@@ -22,6 +22,7 @@
 (require (typed-in racket [remove-duplicates : ((listof 'a) -> (listof 'a))]))
 (require (typed-in racket [abs : (number -> number)]))
 
+
 ;;note: interp and primitives need to be mutually recursive -- primops
 ;;need to lookup and apply underscore members (ie + calls __plus__),
 ;;and applying a function requires m-interp.  Since racket doesn't
@@ -335,7 +336,7 @@
                     [none () (VBool 0)]))]
     [VStr (s) (interp-error "need to handle string in")]
     [VList (l) (if (member val l) (m-return (VBool 1)) (m-return (VBool 0)))]
-    [else (interp-error "in need to take iterable")]))
+    [else (interp-error "in needs to take iterable")]))
 
 ;tell if the item is iterable
 (define (is-iterable it)
@@ -358,6 +359,15 @@
     [VNum (n) (m-return (VList empty))]
     [else (interp-error "argument not iterable")]))
 
+;tuple built-in func
+(define-primf (tup iter & ret)
+   (type-case CVal iter
+    [VTuple (l) (m-return iter)]
+    [VList (l) (m-return (VTuple l))]
+    [VStr (s) (m-return (VTuple (get-str-list s)))]
+    [VNum (n) (m-return (VTuple empty))]
+    [else (interp-error "argument not iterable")]))
+
 ;;checks whether the 2 arguments are equal
 (define-primf (equal left right)
   (type-case CVal left
@@ -376,9 +386,18 @@
 
 
 (define-primf (is left right)
-  (m-return (if (or (eqv? left right) (equal? left right))
+  (type-case CVal left
+    [VList (l)  (m-return 
+                 (if (eqv? left right)
+                     (VBool 1)
+                     (VBool 0)))]
+    [VTuple (t) (m-return 
+                 (if (eqv? left right)
+                     (VBool 1)
+                     (VBool 0)))]
+    [else (m-return (if (or (eqv? left right) (equal? left right))
                 (VBool 1)
-                (VBool 0))))
+                (VBool 0)))]))
 
 ;;numeric addition
 (define-primf (add left right)
@@ -464,41 +483,52 @@
   (if (not (or (equal? +nan.0 L) (equal? +nan.0 R)))
   
       (if (zero? R)
-         (interp-error "divide by 0 error")
+         (interp-error "ZeroDivisionError")
          (m-return (VNum 
                     (/ L R))))
       (interp-error "unhandled operator for /"))))
 
 ;;numeric multiplication(11/14)
 (define-primf (mult left right)
-      (let ((L (type-case 
-              CVal left
-            [VBool (n) n]
-            [VNum (n) n]
-            [VTuple (l) -nan.0]
-            [else +nan.0]))
-        (R (type-case 
-              CVal right
-            [VBool (n) n]
-            [VNum (n) n]
-            [VTuple (l) -nan.0]
-            [else +nan.0])))
-        (if (equal? -nan.0 R)
-            (m-return
-             (VTuple
-              (tuple-mult-helper empty (VTuple-l right) (VNum-n left))));tempory solution, ask William
-        (if (not (or (equal? +nan.0 L) (equal? +nan.0 R)))
-            (m-return (VNum
-             (* L R)))
-            (type-case CVal left
-              [VStr (s) (if (equal? +nan.0 R)
-                            (interp-error "unhandled operator for string*")
-                            (m-return (VStr (mult-helper "" s R))))]
-              [else (type-case CVal right
-                      [VStr (s) (if (equal? +nan.0 L)
-                            (interp-error "unhandled operator for *string")
-                            (m-return (VStr (mult-helper "" s L))))]
-                      [else (interp-error "unhandled operator for string*")])])))))
+    (type-case CVal right
+      [VStr (s) 
+            (type-case CVal left 
+              [VNum (n)   
+                    (m-return
+                     (VStr
+                      (foldr (lambda (st base) (string-append (VStr-s st) base)) 
+                             "" (list-mult-helper empty (get-str-list s) n))
+                      ))]
+              [else (interp-error "cannot multiply by string")])]
+       [VList (l) 
+            (type-case CVal left 
+              [VNum (n)   
+                    (m-return
+                     (VList
+                      (list-mult-helper empty l n)))]
+              [else (interp-error "cannot multiply by string")])]
+      [else 
+       (let ((L (type-case 
+                    CVal left
+                  [VBool (n) n]
+                  [VNum (n) n]
+                  [VTuple (l) -nan.0]
+                  [else +nan.0]))
+             (R (type-case 
+                    CVal right
+                  [VBool (n) n]
+                  [VNum (n) n]
+                  [VTuple (l) -nan.0]
+                  [else +nan.0])))
+ 
+         (if (equal? -nan.0 R)
+               (m-return
+                (VTuple (tuple-mult-helper empty (VTuple-l right) (VNum-n left))))
+               (if (not (or (equal? +nan.0 L) (equal? +nan.0 R)))
+                   (m-return (VNum (* L R)))
+                   (interp-error "unhandled operand for mult")))
+         )]
+      ))
       
      
 
@@ -517,26 +547,48 @@
   
 ;string mult
 (define-primf (str-mult left right)
-  (m-return right))
+  (m-return
+   (VStr
+    (foldr (lambda (st base) (string-append (VStr-s st) base)) 
+       "" (list-mult-helper empty (get-str-list (VStr-s left)) (VNum-n right)))
+     )))
 
 ;str-eq?
 (define-primf (str-eq left right) 
                (type-case CVal right
                  [VStr (s) (m-return (if (string=? (VStr-s left) (VStr-s right)) (VBool 1) (VBool 0)))]
                  [VNone () (m-return (VBool 0))]
-                 [else (interp-error "unsupported operator for str-compare")]))
+                 [else (interp-error "unsupported operand for str-compare")]))
 
 ;string gt
 (define-primf (str-gt left right)
   (type-case CVal right
     [VStr (s) (m-return (if (string>? (VStr-s left) s) (VBool 1) (VBool 0)))]
-    [else (interp-error "unsupported operator for str-gt")]))
+    [else (interp-error "unsupported operand for str-gt")]))
 
 ;string gte
 (define-primf (str-gte left right)
   (type-case CVal right
     [VStr (s) (m-return (if (string>=? (VStr-s left) s) (VBool 1) (VBool 0)))]
-    [else (interp-error "unsupported operator for str-gt")]))
+    [else (interp-error "unsupported operand for str-gt")]))
+
+;str max
+(define-primf (max left right)
+    (type-case CVal left
+      [VStr (ls) (type-case CVal right
+                   [VStr (rs) (m-return (if (string>=? ls rs) left right))]
+                   [else (interp-error "unsupported operator for str-gt")])
+                 ]
+      [else (interp-error "unsupported operand for min/max")]))
+
+;str min
+(define-primf (min left right)
+    (type-case CVal left
+      [VStr (ls) (type-case CVal right
+                   [VStr (rs) (m-return (if (string>=? ls rs) right left))]
+                   [else (interp-error "unsupported operator for str-gt")])
+                 ]
+      [else (interp-error "unsupported operand for min/max")]))
 
 ;none eq?
 (define-primf (none-eq left right)
@@ -593,7 +645,9 @@
             (if (or (equal? -nan.0 L) (equal? -nan.0 R))
                 (m-return (VBool 0))
                 (if (not (or (equal? +nan.0 L) (equal? +nan.0 R)))
-                    (m-return (if (= L R) (VBool 1) (VBool 0)))
+                      (m-return (if 
+                               (= L R)
+                               (VBool 1) (VBool 0)))
                     (interp-error "unsupported operator for num-compare")))))
 
 ;;gets a value from a box
@@ -650,6 +704,7 @@
   (type-case CVal t
     [VTuple (l)  (m-return (VNum (length l)))]
     [VList (l) (m-return (VNum (length l)))]
+    [VStr (s) (m-return (VNum (length (get-str-list s))))]
     [else (interp-error "undefined operand for len")]))
 
 (define-primf (absv v)
@@ -792,6 +847,9 @@
     [(asst-raises) asst-raises]
     [(absv) absv]
     [(str) str]
+    [(tup) tup]
+    [(min) min]
+    [(max) max]
     ))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
