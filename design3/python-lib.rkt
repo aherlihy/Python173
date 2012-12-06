@@ -18,10 +18,12 @@ that calls the primitive `print`.
                           (list (CId 'f)
                                 (CStr "__bool__"))
                           (CTuple empty))
-                    (list (CId 'f))
+                    empty
                     (CTuple empty))
-              (VBool 1)
-              (VBool 0))
+              (CReturn (CTrue))
+              (CReturn (CFalse)))
+              ;(CError (CStr "assertion failed"))
+              ;(CError (CStr "assertion failed")))
               ))
 
 (define assert-false
