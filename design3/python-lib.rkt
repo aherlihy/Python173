@@ -20,8 +20,8 @@ that calls the primitive `print`.
                           (CTuple empty))
                     (list (CId 'f))
                     (CTuple empty))
-              (VBool 1)
-              (VBool 0))
+              (CTrue)
+              (CFalse))
               ))
 
 (define assert-false
