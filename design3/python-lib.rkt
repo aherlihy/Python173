@@ -323,6 +323,8 @@ that calls the primitive `print`.
                          (CPrimF 'bit-or))
                  (values "__bitxor__"
                          (CPrimF 'bit-xor))
+                 (values "__sub__"
+                         (CPrimF 'bit-sub))
                  (values "="
                          (CPrimF 'equal))
                  (values "is"

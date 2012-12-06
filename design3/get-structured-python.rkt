@@ -203,6 +203,11 @@ structure that you define in python-syntax.rkt
      (PyList
       (map get-structured-python elts))]
     
+    [(hash-table ('nodetype "Set")
+                 ('elts elts))
+     (PyList
+      (map get-structured-python elts))]
+    
     [(hash-table ('nodetype "Dict")
                  ('keys keys)
                  ('values values))

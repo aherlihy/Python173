@@ -639,7 +639,6 @@
 ;;bitwise list functions
 (define-primf (bit-and (t VList?) (t2 VList?))
   (m-return
-   ;(VList (remove* (remove-duplicates (append (VList-elts t) (VList-elts t2))) (append (VList-elts t) (VList-elts t2))))))
    (VList (foldr 
            (lambda (m l1) (remove m l1))     
                (append (VList-elts t) (VList-elts t2))
@@ -658,7 +657,8 @@
                (append (VList-elts t) (VList-elts t2))
                (remove-duplicates (append (VList-elts t) (VList-elts t2))))
            (append (VList-elts t) (VList-elts t2))))))
-                   
+(define-primf (bit-sub (t VList?) (t2 VList?))
+  (m-return (VList (remove* (VList-elts t2) (VList-elts t)))))
 ;;finds the length of a tuple
 (define-primf (tuple-length (t VTuple?))
   (m-return (VNum (length (VTuple-l t)))))
@@ -751,6 +751,7 @@
     [(list-append) list-append]
     [(list-mult) list-mult]
     [(bit-and) bit-and]
+    [(bit-sub) bit-sub]
     [(bit-or) bit-or]
     [(bit-xor) bit-xor]
     [(value) value]
