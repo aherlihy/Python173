@@ -347,9 +347,9 @@
       (m-return (VBool 0)))))
 
 (define-primf (is left right)
-  (m-return (if (eqv? left right)
+  (begin (display "in is")(m-return (if (or (eqv? left right) (equal? left right))
                 (VBool 1)
-                (VBool 0))))
+                (VBool 0)))))
 
 ;;numeric addition
 (define-primf (add left right)
