@@ -255,6 +255,8 @@
                                                                             ")")))))]
     [else (m-return (to-string arg))]))
 
+
+
 ;;gets the global variable dict
 (define get-globals
   (pm-lookup-store -2))
@@ -285,6 +287,15 @@
                      (m-return (VNone)))
               (begin (display " ")
                      (print rest)))])))
+
+;;assert-raises
+#|(define-primf (asser-raises raise & rest)
+  (pm-try-catch (m-interp raise env) 
+                              (lambda (error) ; this will  be called if an error has been thrown and not caught
+                                    (m-interp (CError (CStr "assertion failed")) env)) ;;(interp-error (VStr-s error)))))
+                              (lambda (x) (m-interp CNone env))
+                              )
+  )|#
 
 ;get item from hashmap
 (define-primf (get val & ret);first val is attr, ret is a list of actual args
@@ -344,10 +355,20 @@
 
 ;;checks whether the 2 arguments are equal
 (define-primf (equal left right)
-   (if (equal? left
+  (type-case CVal left
+    [VDictM (b) (if (VDictM? right)
+               (m-do [(contents (get-box (list b)))
+                      (contents2 (get-box (list (VDictM-b right))))]
+                     (if (equal? contents
+                                 contents2)
+                         (VBool 1)
+                         (VBool 0)))
+               (m-return (VBool 0)))]
+    [else (if (equal? left
               right)
       (m-return (VBool 1))
-      (m-return (VBool 0))))
+      (m-return (VBool 0)))]))
+
 
 (define-primf (is left right)
   (m-return (if (or (eqv? left right) (equal? left right))
@@ -758,6 +779,7 @@
     [(keys) keys]
     [(items) items]
     [(clear) clear]
+    ;[(asser-raises) asser-raises]
     [(in) in]
     [(get) get]
     [(update) update]
@@ -912,9 +934,9 @@
     [CPrimF (id) (m-return (VPrimF id))]
     [CIf (test t e)
          (m-do ([test-v (m-interp test env)]
-                [(if (equal? test-v (VBool 0))
-                     (m-interp e env)
-                     (m-interp t env))]))]
+                [(if (equal? test-v (VBool 1))
+                     (m-interp t env)
+                     (m-interp e env))]))]
     [CRaise (type msg)
               (if (string=? type "ReRaise")
                 (m-interp last_raise env)

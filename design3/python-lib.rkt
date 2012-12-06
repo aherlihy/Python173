@@ -11,6 +11,18 @@ bindings.  For example, this sample library binds `print` to a function
 that calls the primitive `print`.
 
 |#
+(define make-bool
+  (CFunc (list 'f)
+         (none)
+         (CIf (CApp (CApp (CPrimF 'class-lookup)
+                          (list (CId 'f)
+                                (CStr "__bool__"))
+                          (CTuple empty))
+                    (list (CId 'f))
+                    (CTuple empty))
+              (CError (CStr "assertion failed"))
+              (CError (CStr "assertion failed2"))
+              )))
 
 (define assert-false
   (CFunc (list 'f)
@@ -94,8 +106,9 @@ that calls the primitive `print`.
               (CNone)
               )))
 (define assert-raises
-  
-         (CFunc (list 'a 'b 'c)
+  ;(begin 
+         ;(display "assertR in lib") 
+         (CFunc (list 'a 'b 'c) 
                 (none)
                 (CIf (CApp (CPrimF 'asst-raises)
                            (list (CStr (symbol->string 'a))
@@ -333,21 +346,17 @@ that calls the primitive `print`.
                          (CPrimF 'in))
                  ))
 (make-type mutable-dict-type
-         (list (values "__bool__"
+        (list (values "__bool__"
                          (CFunc (list 'this)
                                 (none)
                                 (CIf (CApp (CPrimF 'equal)
                                            (list (CId 'this)
-                                                 (CDict (list) (list)))
+                                                 (CDictM (CBox (CDict empty empty))))
                                            (CTuple empty))
-                                     (CReturn (CTrue))
-                                     (CReturn (CFalse)))))
-               (values "__len__"
+                                    (CReturn (CFalse))
+                                     (CReturn (CTrue)))))
+                (values "__len__"
                          (CPrimF 'list-length))
-                 (values "__add__"
-                         (CPrimF 'list-append))
-                 (values "__mult__"
-                         (CPrimF 'list-mult))
                  (values "="
                          (CPrimF 'equal))
                  (values "in"
@@ -392,6 +401,7 @@ that calls the primitive `print`.
    (values 'dict mutable-dict-type)
    (values 'int (CPrimF 'int))
    (values 'float (CPrimF 'float))
+   (values 'BOOL make-bool)
    (values 'object obj-type)))
 
 (define lib-exprs
