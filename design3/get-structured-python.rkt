@@ -35,7 +35,7 @@ structure that you define in python-syntax.rkt
                    (PyTuple empty)
                    (get-structured-python starargs)))]
        [_ (PyApp (get-structured-python func-expr)
-                 (map get-structured-python args-list)
+                 (if (empty? args-list) (list (PyNum 0)) (map get-structured-python args-list))
                  (if (equal? starargs #\nul)
                      (PyTuple empty)
                      (get-structured-python starargs)))])]
