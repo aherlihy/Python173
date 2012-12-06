@@ -11,6 +11,18 @@ bindings.  For example, this sample library binds `print` to a function
 that calls the primitive `print`.
 
 |#
+(define make-bool
+  (CFunc (list 'f)
+         (none)
+         (CIf (CApp (CApp (CPrimF 'class-lookup)
+                          (list (CId 'f)
+                                (CStr "__bool__"))
+                          (CTuple empty))
+                    (list (CId 'f))
+                    (CTuple empty))
+              (CError (CStr "assertion failed"))
+              (CError (CStr "assertion failed2"))
+              )))
 
 (define assert-false
   (CFunc (list 'f)
@@ -27,7 +39,7 @@ that calls the primitive `print`.
 
      
 (define assert-true
-  (begin (display "assert-true in lib")(CFunc (list 'f)
+  (CFunc (list 'f)
          (none)
          (CIf (CApp (CApp (CPrimF 'class-lookup)
                           (list (CId 'f)
@@ -36,7 +48,7 @@ that calls the primitive `print`.
                     empty
                     (CTuple empty))
               (CNone)
-              (CError (CStr "assertion failed"))))))
+              (CError (CStr "assertion failed")))))
 
 (define assert-equal
   (CFunc (list 'a 'b)
@@ -75,16 +87,28 @@ that calls the primitive `print`.
               (CNone)
               (CError (CStr "assertion failed")))))
 (define assert-raises
-  (begin 
-         (display "assertR in lib") 
-         (CFunc (list 'a 'b 'c)
+  ;(begin 
+         ;(display "assertR in lib") 
+         (CFunc (list 'a 'b 'c) ;;unknown length of args
                 (none)
                 (CIf (CApp (CPrimF 'asst-raises)
                            (list (CStr (symbol->string 'a))
                                  (CStr (symbol->string  'b)))
                            (CTuple empty))
                      (CNone)
-                     (CError (CStr "assertion failed"))))))
+                     (CError (CStr "assertion failed")))));)
+
+(define assert-raises
+  ;(begin 
+         ;(display "assertR in lib") 
+         (CFunc (list 'a 'b) ;;unknown length of args
+                (none)
+                (CIf (CApp (CPrimF 'asst-raises)
+                           (list (CStr (symbol->string 'a))
+                                 (CStr (symbol->string  'b)))
+                           (CTuple empty))
+                     (CNone)
+                     (CError (CStr "assertion failed")))))
 
   
 (define partial-apply
@@ -297,21 +321,17 @@ that calls the primitive `print`.
                          (CPrimF 'is))
                  ))
 (make-type mutable-dict-type
-         (list (values "__bool__"
+        (list (values "__bool__"
                          (CFunc (list 'this)
                                 (none)
                                 (CIf (CApp (CPrimF 'equal)
                                            (list (CId 'this)
-                                                 (CDict (list) (list)))
+                                                 (CDictM (CBox (CDict empty empty))))
                                            (CTuple empty))
-                                     (CReturn (CTrue))
-                                     (CReturn (CFalse)))))
-               (values "__len__"
+                                    (CReturn (CFalse))
+                                     (CReturn (CTrue)))))
+                (values "__len__"
                          (CPrimF 'list-length))
-                 (values "__add__"
-                         (CPrimF 'list-append))
-                 (values "__mult__"
-                         (CPrimF 'list-mult))
                  (values "="
                          (CPrimF 'equal))
                  (values "in"
@@ -336,14 +356,13 @@ that calls the primitive `print`.
    (values 'True (CTrue))
    (values 'False (CFalse))
    (values 'None (CNone))
-   (values '___assertRaises assert-raises)
+   (values '___assertRaises 'asser-raises)
    (values '___assertTrue assert-true)
    (values '___assertFalse assert-false)
    (values '___assertEqual assert-equal)
    (values '___assertNotEqual assert-not-equal)
-   (values '___assertIs assert-is);hack for now, fix for later
+   (values '___assertIs assert-is)
    (values '___assertIsNot assert-not-is)
-
    (values 'type class-type)
    (values 'bool bool-type)
    (values 'int num-type)
@@ -353,6 +372,7 @@ that calls the primitive `print`.
    (values 'dict mutable-dict-type)
    (values 'int (CPrimF 'int))
    (values 'float (CPrimF 'float))
+   (values 'BOOL make-bool)
    (values 'object obj-type)))
 
 (define lib-exprs

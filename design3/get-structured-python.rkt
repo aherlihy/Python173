@@ -42,9 +42,10 @@ structure that you define in python-syntax.rkt
     [(hash-table ('nodetype "Name")
                  ('ctx (hash-table ('nodetype "Load")))
                  ('id id))
-            (if (string=? id "list") 
-                (PyId (string->symbol "LIST"))
-                (PyId (string->symbol id)))];I HAVE NO IDEA WHY THIS WORKS
+            (cond 
+              [(string=? id "list")(PyId (string->symbol "LIST"))]
+              [(string=? id "bool")(PyId (string->symbol "BOOL"))]
+              [else  (PyId (string->symbol id))])];I HAVE NO IDEA WHY THIS WORKS
     [(hash-table ('nodetype "Assign")
                  ('targets vars)
                  ('value value))

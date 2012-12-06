@@ -1,5 +1,4 @@
-x=1
-if x:
+if {}:
 	print("true")
 else:
 	print("false")
