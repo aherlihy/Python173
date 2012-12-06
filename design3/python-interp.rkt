@@ -350,7 +350,7 @@
   (map VStr (remove* (list "") (regexp-split "(0*)" str))))
 
 ;list built-in func
-(define-primf (list-f iter)
+(define-primf (list-f iter & ret)
    (type-case CVal iter
     [VTuple (l) (m-return (VList l))]
     [VList (l) (m-return (VList l))]
@@ -714,15 +714,15 @@
   (m-return (VBool 1)))
 
 ;get hash values
-(define-primf (value (d VDictM?))
+(define-primf (value (d VDictM?) & ret)
   (m-do ([contents (get-box (list (VDictM-b d)))])
         (VList (hash-values (VDict-hashes contents)))))
 ;get hash keys
-(define-primf (keys (d VDictM?))
+(define-primf (keys (d VDictM?) & ret)
   (m-do ([contents (get-box (list (VDictM-b d)))])
         (VList (hash-keys (VDict-hashes contents)))))
 
-(define-primf (clear (d VDictM?))
+(define-primf (clear (d VDictM?) & ret)
   (set-box (list (VDictM-b d) (VDict (hash empty)))))
 
 ;constucting hash helper

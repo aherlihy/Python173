@@ -20,9 +20,9 @@ that calls the primitive `print`.
                           (CTuple empty))
                     (list (CId 'f))
                     (CTuple empty))
-              (CError (CStr "assertion failed"))
-              (CError (CStr "assertion failed2"))
-              )))
+              (VBool 1)
+              (VBool 0))
+              ))
 
 (define assert-false
   (CFunc (list 'f)
@@ -105,17 +105,20 @@ that calls the primitive `print`.
               (CError (CStr "assertion failed"))
               (CNone)
               )))
-(define assert-raises
-  ;(begin 
-         ;(display "assertR in lib") 
-         (CFunc (list 'a 'b 'c) 
-                (none)
-                (CIf (CApp (CPrimF 'asst-raises)
-                           (list (CStr (symbol->string 'a))
-                                 (CStr (symbol->string  'b)))
-                           (CTuple empty))
-                     (CNone)
-                     (CError (CStr "assertion failed")))))
+(define assert-raises 
+  (CFunc (list 'a 'b)
+         (none)
+         (CIf (CApp (CPrimF 'in)
+                    (list (CId 'b)
+                          (CId 'a))
+                    (CTuple empty))
+              (CError (CStr "assertion failed"))
+              (CNone)
+              )))
+         ;(CFunc (list 'a 'b) 
+            ;    (some 'args)
+              ;  (CTryExcp (CApp (CPrimF 'b)
+                              ;  (list (CId) 
 
   
 (define partial-apply
