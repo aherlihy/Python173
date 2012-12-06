@@ -315,9 +315,14 @@
 
 ; update hashmap
 (define-primf (update d & args)
-      (m-do ([contents (get-box (list (VDictM-b (first args))))]
-             [toret (set-box (list (VDictM-b d) contents))])
-             (VNone)))
+  (if (zero? (length args))
+      (m-return (VNone))
+      (type-case CVal (first args)
+        [VNone () (interp-error "cannot hash to none")]
+        [else (m-do ([contents (get-box (list (VDictM-b (first args))))]
+               [toret (set-box (list (VDictM-b d) contents))])
+              (VNone))]
+        )))
            
 
 ;if item is in hashmap OR string is substring
