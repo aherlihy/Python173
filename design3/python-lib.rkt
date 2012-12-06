@@ -379,7 +379,7 @@ that calls the primitive `print`.
    (values 'True (CTrue))
    (values 'False (CFalse))
    (values 'None (CNone))
-   (values '___assertRaises 'asser-raises)
+   (values '___assertRaises assert-raises)
    (values '___assertTrue assert-true)
    (values '___assertFalse assert-false)
    (values '___assertEqual assert-equal)
