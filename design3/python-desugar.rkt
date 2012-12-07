@@ -2,6 +2,7 @@
 
 (require "python-syntax.rkt"
          "python-core-syntax.rkt")
+(require (typed-in racket [string-length : (string -> number)]))
 
 (print-only-errors true)
 
@@ -66,6 +67,8 @@
             [(Add) (binop "__add__" (first args) (second args))];(11/4)This is where we want to branch on what kind of args
             [(Sub) (binop "__sub__" (first args) (second args))]
             [(Mult) (binop "__mult__" (first args) (second args))];(11/4)
+            [(FloorDiv) (binop "__div-floor__" (first args) (second args))]
+            [(Mod) (binop "__mod__" (first args) (second args))]
             [(Div) (binop "__div__" (first args) (second args))];(11/4)
             [(USub) (unop "__neg__" (first args))]
             [(Invert) (unop "__inv__" (first args))]
@@ -109,6 +112,13 @@
     [PyDictLoad (dict key) (CDictLoad (desugar-inner dict) (desugar-inner key))]
     [PyDictStore (dict key) (CDictStore (desugar-inner dict) (desugar-inner key))]
     [PyAssign (to from) (CAssign (desugar-inner to) (desugar-inner from))]
+    [PySlice (val upper lower step) 
+             (type-case PyExp val
+               [PyStr (s) (CSlice (desugar-inner val)
+                                  (desugar-inner upper) 
+                                  (if (= (PyNum-n lower) -1) (CNum (string-length s)) (desugar-inner lower))
+                                  (desugar-inner step))]
+               [else (error 'desugar "calling slice on non string type.")])]
     ))
 
 

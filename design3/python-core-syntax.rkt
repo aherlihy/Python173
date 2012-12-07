@@ -35,6 +35,7 @@
   [CDictLoad (dict : CExp) (key : CExp)]
   [CDictStore (dict : CExp) (key : CExp)]
   [CAssign (to : CExp) (from : CExp)]
+  [CSlice (val : CExp) (upper : CExp) (lower : CExp) (step : CExp)]
   [CError (val : CExp)])
 
 (define-type CVal

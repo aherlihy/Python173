@@ -10,6 +10,7 @@
 (require (typed-in racket [eqv? : ('a 'b -> boolean)]))
 (require (typed-in racket [string>? : (string string -> boolean)]))
 (require (typed-in racket [string>=? : (string string -> boolean)]))
+(require (typed-in racket [string<=? : (string string -> boolean)]))
 (require (typed-in racket [string->number : (string -> number)]))
 (require (typed-in racket [regexp-split : (string string -> (listof string))]))
 (require (typed-in racket [remove* : ((listof 'a) (listof 'a) -> (listof 'a))]))
@@ -336,7 +337,7 @@
                   (type-case (optionof CVal) (hash-ref (VDict-hashes contents) val)
                     [some (v) (VBool 1)]
                     [none () (VBool 0)]))]
-    [VStr (s) (interp-error "need to handle string in")]
+    [VStr (s) (if (string-contains? (VStr-s val) s) (m-return (VBool 1)) (m-return (VBool 0)))]
     [VList (l) (if (member val l) (m-return (VBool 1)) (m-return (VBool 0)))]
     [else (interp-error "in needs to take iterable")]))
 
@@ -470,6 +471,19 @@
   (if (not (equal? +nan.0 L))
       (m-return (VNum (- 0 (+ 1 L))))
       (interp-error "unhandled operator for +"))))
+
+;mod
+(define-primf (mod left right)
+    (if (zero? (VNum-n right))
+         (interp-error "ZeroDivisionError")
+         (m-return (VNum (modulo (VNum-n left) (VNum-n right))))))
+
+;floor div
+(define-primf (div-floor left right)
+  (if (zero? (VNum-n right))
+         (interp-error "ZeroDivisionError")
+         (m-return (VNum (floor (/ (VNum-n left) (VNum-n right)))))))
+
 ;;numeric division(11/14)
 (define-primf (div left right)
     (let ((L (type-case 
@@ -575,21 +589,23 @@
     [else (interp-error "unsupported operand for str-gt")]))
 
 ;str max
-(define-primf (max left right)
-    (type-case CVal left
-      [VStr (ls) (type-case CVal right
-                   [VStr (rs) (m-return (if (string>=? ls rs) left right))]
-                   [else (interp-error "unsupported operator for str-gt")])
-                 ]
+(define-primf (max val)
+    (type-case CVal val
+      [VStr (s) (m-return 
+                 (VStr
+                      (foldr (lambda (st base) (if (string>=? (VStr-s st) base) (VStr-s st) base)) 
+                             "" (get-str-list s))
+                      )) ]
       [else (interp-error "unsupported operand for min/max")]))
 
 ;str min
-(define-primf (min left right)
-    (type-case CVal left
-      [VStr (ls) (type-case CVal right
-                   [VStr (rs) (m-return (if (string>=? ls rs) right left))]
-                   [else (interp-error "unsupported operator for str-gt")])
-                 ]
+(define-primf (min val)
+    (type-case CVal val
+      [VStr (s) (m-return 
+                 (VStr
+                      (foldr (lambda (st base) (if (string<=? (VStr-s st) base) (VStr-s st) base)) 
+                             "z" (remove* (list (VStr "")) (get-str-list s)))
+                      )) ]
       [else (interp-error "unsupported operand for min/max")]))
 
 ;none eq?
@@ -821,6 +837,8 @@
     [(int-inv) inv]
     [(int-mult) mult];(11/4)
     [(int-div) div];(11/4)
+    [(div-floor) div-floor]
+    [(mod) mod]
     [(int-gt) int-gt];(11/16)
     [(int-gte) int-gte];(11/16)
     [(int-eq) int-eq];(11/16)
@@ -1022,12 +1040,13 @@
                   (m-interp (CError (CStr pret-args)) env))))
               ]
     [CTryExcp (try name except e)
-              (pm-try-catch (m-interp try env) 
+                (pm-try-catch (m-interp try env) 
                               (lambda (error) 
-                                 (if (or (string=? (first (string-split (VStr-s error))) name) (string=? name "ExceptAll")) 
-                                  (m-interp except env)
-                                    (m-interp (CRaise (VStr-s error) (list)) env))) ;;(interp-error (VStr-s error)))))
-                              (lambda (x) (m-interp e env))
+                                   (if (or (string=? (first (string-split (VStr-s error))) name) (string=? name "ExceptAll")) 
+                                       (m-interp except env)
+                                       (m-interp (CRaise (VStr-s error) (list)) env))) ;;(interp-error (VStr-s error)))))
+                              (lambda (x) 
+                               (m-interp e env))
                               )]
     [CTryFinal (try final)
               (pm-try-catch (m-interp try env) 
@@ -1072,6 +1091,13 @@
                     [v (m-interp from env)]
                     [newDict (set-box (list (VDictM-b d) (VDict (hash-set (VDict-hashes contents) k v))))])
                    (VNone))]
+    [CSlice (val upper lower slice)
+            (type-case CExp val
+              [CStr (s) (m-return (VStr s))]
+                  ;  (
+                   ;  if (
+                    ;    )]
+              [else (interp-error "nonstring type given to slice - not implemented (handled in desugar)")])]
                    
     ))
 
