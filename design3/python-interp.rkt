@@ -1093,7 +1093,7 @@
                    (VNone))]
     [CSlice (val upper lower slice)
             (type-case CVal val
-              [CStr (s) val]
+              [VStr (s) val]
                   ;  (
                    ;  if (
                     ;    )]
