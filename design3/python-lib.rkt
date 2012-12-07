@@ -218,6 +218,10 @@ that calls the primitive `print`.
                          (CPrimF 'int-mult))
                  (values "__div__"
                          (CPrimF 'int-div))
+                 (values "__div-floor__"
+                         (CPrimF 'div-floor))
+                 (values "__mod__"
+                         (CPrimF 'mod))
                  (values "__neg__"
                          (CPrimF 'int-neg))
                  (values "__pls__"

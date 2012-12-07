@@ -190,7 +190,7 @@ structure that you define in python-syntax.rkt
                  ('body try)
                  ('orelse e)
                  ('handlers excpt))
-     (PyTryExcp (PySeq (map get-structured-python try)) (get-structured-python (first excpt)) (if (empty? e) (PyPass) ((PySeq (map get-structured-python e)))))]
+     (PyTryExcp (PySeq (map get-structured-python try)) (get-structured-python (first excpt)) (if (empty? e) (PyPass) (PySeq (map get-structured-python e))))]
     [(hash-table ('nodetype "ExceptHandler")
                  ('body except)
                  ('name n)
@@ -222,13 +222,25 @@ structure that you define in python-syntax.rkt
       (match slice
         [(hash-table ('nodetype "Index")
                      ('value arg))
-         
            (match c
                [(hash-table ('nodetype "Store")) (PyDictStore (get-structured-python dict) (get-structured-python arg))]
-               [(hash-table ('nodetype "Load"))  (PyDictLoad (get-structured-python dict) (get-structured-python arg))];dict + suc
-               [(hash-table ('nodetype "Del")) (PyOp (string->symbol "del") (list (get-structured-python dict) (get-structured-python arg)))]
+               [(hash-table ('nodetype "Load"))  
+                                             ; (match dict
+                                             ;   [(hash-table ('nodetype "Dict")
+                                             ;                ('keys keys)
+                                             ;                ('values values))
+                                                 (PyDictLoad (get-structured-python dict) (get-structured-python arg))];dict + suc
+                                             ;   [(hash-table ('nodetype "Str")
+                                             ;                ('s s))
+                                             ;    (PyStrLoad (]
+             [(hash-table ('nodetype "Del")) (PyOp (string->symbol "del") (list (get-structured-python dict) (get-structured-python arg)))]
                [_ (error 'parse (string-append "Haven't nonstore/load thing:\n"
                                 (format "~s" pyjson)))])]
+        [(hash-table ('nodetype "Slice")
+                     ('upper upper)
+                     ('lower lower)
+                     ('step step))
+             (PySlice (get-structured-python dict) (if (equal? upper #\nul) (PyNum 0) (get-structured-python upper)) (if (equal? step #\nul) (PyNum -1) (get-structured-python lower)) (if (equal? step #\nul) (PyNum 1) (get-structured-python step)))]
         [_ (error 'parse (string-append "Haven't handled slicing:\n"
                                 (format "~s" pyjson)))])]
     [(hash-table ('nodetype "Delete")

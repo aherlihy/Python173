@@ -1,3 +1,6 @@
-try: 5.0/0.0
-except Exception: pass
-else: pass
+
+try: 5.0/1.0
+except ZeroDivisionError:
+    print("excp")
+else:
+    print("else")

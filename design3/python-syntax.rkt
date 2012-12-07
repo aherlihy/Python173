@@ -22,6 +22,7 @@
   [PyAssign (to : PyExp) (from : PyExp)]
   [PyDictLoad (dict : PyExp) (ind : PyExp)]
   [PyDictStore (dict : PyExp) (ind : PyExp)]
+  [PySlice (val : PyExp) (upper : PyExp) (lower : PyExp) (step : PyExp)]
   [PyPass])
 
 (define someF some)
