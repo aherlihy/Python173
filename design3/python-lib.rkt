@@ -18,7 +18,7 @@ that calls the primitive `print`.
                           (list (CId 'f)
                                 (CStr "__bool__"))
                           (CTuple empty))
-                    (list (CId 'f))
+                    empty
                     (CTuple empty))
               (CReturn (CTrue))
               (CReturn (CFalse)))
@@ -199,7 +199,7 @@ that calls the primitive `print`.
            (list (values "__bool__"
                          (CFunc (list 'this)
                                 (none)
-                                (CIf (CApp (CPrimF 'equal)
+                                (CIf (CApp (CPrimF 'int-eq)
                                            (list (CId 'this)
                                                  (CNum 0))
                                            (CTuple empty))
@@ -237,7 +237,7 @@ that calls the primitive `print`.
            (list (values "__bool__"
                          (CFunc (list 'this)
                                 (none)
-                                (CIf (CApp (CPrimF 'equal)
+                                (CIf (CApp (CPrimF 'str-eq)
                                            (list (CId 'this)
                                                  (CStr ""))
                                            (CTuple empty))
@@ -247,7 +247,7 @@ that calls the primitive `print`.
                          (CPrimF 'str-add))
 
                  (values "__mult__"
-                         (CPrimF 'int-mult))
+                         (CPrimF 'str-mult))
                  (values ">"
                          (CPrimF 'str-gt))
                  (values ">="
@@ -256,6 +256,12 @@ that calls the primitive `print`.
                          (CPrimF 'str-eq)) 
                  (values "in"
                          (CPrimF 'in))
+                 (values "tuple"
+                         (CPrimF 'tup))
+                 (values "min"
+                         (CPrimF 'min))
+                 (values "max"
+                         (CPrimF 'max))
                  (values "is"
                          (CPrimF 'is))));(11/15)now basically everything-mult
 
@@ -312,6 +318,8 @@ that calls the primitive `print`.
                          (CPrimF 'equal))
                  (values "is"
                          (CPrimF 'is))
+                 (values "tuple"
+                         (CPrimF 'tup))
                  ))
 (make-type list-type
            (list (values "__bool__"
@@ -335,10 +343,14 @@ that calls the primitive `print`.
                          (CPrimF 'bit-or))
                  (values "__bitxor__"
                          (CPrimF 'bit-xor))
+                 (values "__sub__"
+                         (CPrimF 'bit-sub))
                  (values "="
                          (CPrimF 'equal))
                  (values "is"
                          (CPrimF 'is))
+                 (values "tuple"
+                         (CPrimF 'tup))
                  (values "in"
                          (CPrimF 'in))
                  ))
@@ -367,6 +379,8 @@ that calls the primitive `print`.
   (list
    (values 'print (CPrimF 'print))
    (values 'get (CPrimF 'get))
+   (values 'min (CPrimF 'min))
+   (values 'max (CPrimF 'max))
    (values 'LIST (CPrimF 'list-f))
    (values 'set (CPrimF 'list-f))
    (values 'items (CPrimF 'items))
@@ -399,6 +413,7 @@ that calls the primitive `print`.
    (values 'int (CPrimF 'int))
    (values 'float (CPrimF 'float))
    (values 'BOOL make-bool)
+   (values 'tuple (CPrimF 'tup))
    (values 'object obj-type)))
 
 (define lib-exprs

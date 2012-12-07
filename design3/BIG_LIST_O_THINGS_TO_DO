@@ -24,13 +24,14 @@ ASSERTS
 done
 assertEqual -> assertNotEqual
 assertIs -> assertIsNot
+assertIn -> assertNotIn
 
 todo
 
 
 assertTrue -> assertFalse
 
-assertIn -> assertNotIn
+
 
 assertRaises
 ___fail
@@ -38,3 +39,4 @@ ___fail
 misc
 except RuntimeError as e:
 'in' for strings
+bool cast doesn't work

@@ -1,7 +1,4 @@
+try: 5.0/0.0
+except Exception: pass
+else: pass
 
-try: 
-	{}.get(None, None, None)
-except:
-	print("exception")
-else:
-	print("else")
