@@ -26,7 +26,6 @@
                 [string-contains? : (string string -> boolean)]))
 
 
-
 ;;note: interp and primitives need to be mutually recursive -- primops
 ;;need to lookup and apply underscore members (ie + calls __plus__),
 ;;and applying a function requires m-interp.  Since racket doesn't
@@ -44,7 +43,7 @@
 ;;assume they are correct
 
 
-(define last_raise (CRaise "RuntimeError" (list))) ; keep track of prev raise for re-raises
+(define last_raise (CRaise "RuntimeError" (list "No active exception"))) ; keep track of prev raise for re-raises
 
 ;;helper macro for (define-primf)
 (define-syntax prim-bind
@@ -304,13 +303,13 @@
 
 ;get item from hashmap
 (define-primf (get val & ret);first val is attr, ret is a list of actual args
-    (m-do ([contents (get-box (list (VDictM-b val)))])
-          (type-case (optionof CVal) (hash-ref (VDict-hashes contents) (first ret))
-            [some (v) v]
+    (m-do ([contents (get-box (list (VDictM-b val)))]
+          [(type-case (optionof CVal) (hash-ref (VDict-hashes contents) (first ret))
+            [some (v) (m-return v)]
             [none () (cond
-                       [(equal? 1 (length ret)) (VNone)]
-                       [(equal? 2 (length ret)) (second ret)]
-                       [else (error 'interp "TypeError")])])))
+                       [(equal? 1 (length ret)) (m-return (VNone))]
+                       [(equal? 2 (length ret)) (m-return (second ret))]
+                       [else (interp-error "TypeError")])])])))
 
 ;remove item from hashmap
 (define-primf (del dict key);VDict, CVal (key)
@@ -323,10 +322,10 @@
   (if (zero? (length args))
       (m-return (VNone))
       (type-case CVal (first args)
-        [VNone () (interp-error "cannot hash to none")]
-        [else (m-do ([contents (get-box (list (VDictM-b (first args))))]
-               [toret (set-box (list (VDictM-b d) contents))])
-              (VNone))]
+        [VDictM (b) (m-do ([contents (get-box (list b))]
+             [toret (set-box (list (VDictM-b d) contents))])
+             (VNone))]
+        [else (interp-error "TypeError")]
         )))
            
 
@@ -789,15 +788,23 @@
 
 ;get hash values
 (define-primf (value (d VDictM?) & ret)
-  (m-do ([contents (get-box (list (VDictM-b d)))])
-        (VList (hash-values (VDict-hashes contents)))))
+  (if (empty? ret)
+      (m-do ([contents (get-box (list (VDictM-b d)))])
+            (VList (hash-values (VDict-hashes contents))))
+      (interp-error "TypeError")))
+
 ;get hash keys
 (define-primf (keys (d VDictM?) & ret)
-  (m-do ([contents (get-box (list (VDictM-b d)))])
-        (VList (hash-keys (VDict-hashes contents)))))
+  (if (empty? ret)
+      (m-do ([contents (get-box (list (VDictM-b d)))])
+            (VList (hash-keys (VDict-hashes contents))))
+      (interp-error "TypeError")))
+  
 
 (define-primf (clear (d VDictM?) & ret)
-  (set-box (list (VDictM-b d) (VDict (hash empty)))))
+  (if (empty? ret)
+      (set-box (list (VDictM-b d) (VDict (hash empty))))
+      (interp-error "type Error")))
 
 ;constucting hash helper
 (define (lists2ltup l1 l2)
@@ -806,12 +813,13 @@
       (cons (VTuple (list (first l1) (first l2))) (lists2ltup (rest l1) (rest l2)))))
 
 ;get hash items
-(define-primf (items (d VDictM?))
-  (m-do ([contents (get-box (list (VDictM-b d)))])
-         (VList (lists2ltup (hash-keys (VDict-hashes contents)) (hash-values (VDict-hashes contents))))))
+(define-primf (items (d VDictM?) & ret)
+    (if (empty? ret)
+            (m-do ([contents (get-box (list (VDictM-b d)))])
+                   (VList (lists2ltup (hash-keys (VDict-hashes contents)) (hash-values (VDict-hashes contents)))))
+    (interp-error "TypeError")))
+ 
 
-(define-primf (asst-raises val & ret)
-  (begin (display "asst-raises interp") (m-return (VBool 1))))
   
 ;;finds the appropriate racket function for a given VPrimF symbol
 (define (python-prim op) : ((listof CVal) -> (PM CVal))
@@ -865,7 +873,6 @@
     [(get) get]
     [(update) update]
     [(del) del]
-    [(asst-raises) asst-raises]
     [(absv) absv]
     [(str) str]
     [(tup) tup]
@@ -1086,10 +1093,10 @@
                    (VNone))]
     [CSlice (val upper lower slice)
             (type-case CVal val
-              [CStr (s) 
-                    (
-                     if (
-                        )]
+              [CStr (s) val]
+                  ;  (
+                   ;  if (
+                    ;    )]
               [else (interp-error "nonstring type given to slice - not implemented (handled in desugar)")])]
                    
     ))

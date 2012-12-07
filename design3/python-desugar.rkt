@@ -39,13 +39,18 @@
     [PyId (x) (CId x)]
     [PySet! (id value) (CSet! id (desugar-inner value))]
     [PyApp (f args varargs) 
-           ;(case f
-            ; [(PyId 'bool) (desugar-inner (PyIf (first args) (PyId 'True) (PyId 'False)))]
-            ; [else 
-           (CApp (desugar-inner f)
+           (cond
+             [(equal? f (PyId '___assertRaises)) 
+              (CApp 
+               (desugar-inner f)
+               (list (CTryExcp (desugar (first args))
+                    "ExceptAll"
+                    (CNone)
+                    (CError (CStr "assertion failed"))))
+               (desugar-inner varargs))]
+           [else (CApp (desugar-inner f)
                                   (map desugar-inner args)
-                                  (desugar-inner varargs))
-          ; ])
+                                  (desugar-inner varargs))])
            ]
     [PyFunc (args vararg body) (CFunc args vararg (desugar-body body))]
     [PyReturn (value) (CReturn (desugar-inner value))]
