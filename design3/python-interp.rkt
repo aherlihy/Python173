@@ -303,13 +303,15 @@
 
 ;get item from hashmap
 (define-primf (get val & ret);first val is attr, ret is a list of actual args
-    (m-do ([contents (get-box (list (VDictM-b val)))]
+    (if (empty? ret)
+        (interp-error "typeError")
+        (m-do ([contents (get-box (list (VDictM-b val)))]
           [(type-case (optionof CVal) (hash-ref (VDict-hashes contents) (first ret))
             [some (v) (m-return v)]
             [none () (cond
                        [(equal? 1 (length ret)) (m-return (VNone))]
                        [(equal? 2 (length ret)) (m-return (second ret))]
-                       [else (interp-error "TypeError")])])])))
+                       [else (interp-error "TypeError")])])]))))
 
 ;remove item from hashmap
 (define-primf (del dict key);VDict, CVal (key)
@@ -735,6 +737,7 @@
   (type-case CVal v
     [VBool (n) (if (= 1 n) (m-return (VStr "True")) (m-return (VStr "False")))]
     [else (interp-error "undefined operand for str")]))
+
 ;;bitwise list functions
 (define-primf (bit-and (t VList?) (t2 VList?))
   (m-return
