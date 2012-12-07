@@ -1,6 +1,6 @@
 # calling built-in types without argument must return empty
 ___assertEqual(tuple(), ())
- c t0_3 = (0, 1, 2, 3)
+t0_3 = (0, 1, 2, 3)
 t0_3_bis = tuple(t0_3)
 ___assertTrue(t0_3 is t0_3_bis)
 ___assertEqual(tuple([]), ())
