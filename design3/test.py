@@ -1,5 +1,7 @@
 
-d = {}
-print(d == {})
-___assertEqual(d,{}) 
-
+try: 
+	{}.get(None, None, None)
+except:
+	print("exception")
+else:
+	print("else")
