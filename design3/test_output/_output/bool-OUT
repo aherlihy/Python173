@@ -1,13 +1,1 @@
-python-interp.rkt:598:2: type-case: syntax error; probable cause: you did not include a case for the CList variant, or no else-branch was present
-  in: (type-case CExp expr (CUndefined () (#%expression (m-return (VUndefined)))) (CNone () (#%expression (m-return (VNone)))) (CTrue () (#%expression (m-return (VBool 1)))) (CFalse () (#%expression (m-return (VBool 0)))) (CNum (n) (#%expression (m-return (VN...
-  context...:
-   /pro/plt/software/racket/5.3/i686/collects/plai/../racket/private/map.rkt:26:19: loop
-   /pro/plt/software/racket/5.3/i686/collects/plai/../racket/private/map.rkt:26:19: loop
-   /pro/plt/software/racket/5.3/i686/collects/plai/../racket/private/map.rkt:26:19: loop
-   /pro/plt/software/racket/5.3/i686/collects/plai/../racket/private/map.rkt:26:19: loop
-   /pro/plt/software/racket/5.3/i686/collects/plai/../racket/private/map.rkt:26:19: loop
-   /pro/plt/software/racket/5.3/i686/collects/plai/../racket/private/map.rkt:26:19: loop
-   /pro/plt/software/racket/5.3/i686/collects/plai/../racket/private/map.rkt:26:19: loop
-   try-next
-   standard-module-name-resolver
-   standard-module-name-resolver
+user break

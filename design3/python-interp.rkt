@@ -1092,8 +1092,8 @@
                     [newDict (set-box (list (VDictM-b d) (VDict (hash-set (VDict-hashes contents) k v))))])
                    (VNone))]
     [CSlice (val upper lower slice)
-            (type-case CVal val
-              [VStr (s) val]
+            (type-case CExp val
+              [CStr (s) (m-return (VStr s))]
                   ;  (
                    ;  if (
                     ;    )]
