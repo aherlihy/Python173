@@ -1,0 +1,4 @@
+interp: (VStr "local used before it was defined: 'y")
+  context...:
+   /pro/plt/software/racket/5.3/i686/collects/racket/cmdline.rkt:470:12: loop
+   /gpfs/main/home/aecarlso/python173/Python173/design3/python-main.rkt: [running body]

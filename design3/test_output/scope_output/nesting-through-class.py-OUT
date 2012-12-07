@@ -1,0 +1,9 @@
+parse: Haven't handled a case yet:
+#hasheq((starargs . #\nul) (body . (#hasheq((args . #hasheq((args . (#hasheq((arg . "self") (nodetype . "arg") (annotation . #\nul)) #hasheq((arg . "y") (nodetype . "arg") (annotation . #\nul)))) (vararg . #\nul) (nodetype . "arguments") (defaults . ()) (kwonlyargs . ()) (kw_defaults . ()) (varargannotation . #\nul) (kwarg . #\nul) (kwargannotation . #\nul))) (body . (#hasheq((value . #hasheq((nodetype . "BinOp") (left . #hasheq((id . "x") (nodetype . "Name") (ctx . #hasheq((nodetype . "Load"))))) (op . #hasheq((nodetype . "Add"))) (right . #hasheq((id . "y") (nodetype . "Name") (ctx . #hasheq((nodetype . "Load"))))))) (nodetype . "Return")))) (name . "__call__") (nodetype . "FunctionDef") (returns . #\nul) (decorator_list . ())))) (name . "Adder") (nodetype . "ClassDef") (decorator_list . ()) (keywords . ()) (kwargs . #\nul) (bases . ()))
+  context...:
+   /pro/plt/software/racket/5.3/i686/collects/racket/private/map.rkt:21:13: map
+   parse-loop918
+   /pro/plt/software/racket/5.3/i686/collects/racket/private/map.rkt:26:19: loop
+   parse-loop1374
+   /pro/plt/software/racket/5.3/i686/collects/racket/cmdline.rkt:470:12: loop
+   /gpfs/main/home/aecarlso/python173/Python173/design3/python-main.rkt: [running body]

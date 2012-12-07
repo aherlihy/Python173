@@ -9,7 +9,7 @@ sigquit_handler() {
 trap sigquit_handler SIGQUIT
 
 DIRECTORY=./test_output/$1_output
-FILES=~/course/cs173/python/Python173/design3/python-reference/$1/*
+FILES=~/python/Python173/design3/python-reference/$1/*
 
 if [ ! -d "./test_output" ]; then
     mkdir "./test_output"
