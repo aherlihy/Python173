@@ -1,0 +1,14 @@
+parse: Haven't handled a case yet:
+#hasheq((nodetype . "GeneratorExp") (generators . (#hasheq((target . #hasheq((id . "x") (nodetype . "Name") (ctx . #hasheq((nodetype . "Store"))))) (nodetype . "comprehension") (iter . #hasheq((id . "S") (nodetype . "Name") (ctx . #hasheq((nodetype . "Load"))))) (ifs . ())))) (elt . #hasheq((ops . (#hasheq((nodetype . "Gt")))) (nodetype . "Compare") (left . #hasheq((id . "x") (nodetype . "Name") (ctx . #hasheq((nodetype . "Load"))))) (comparators . (#hasheq((n . 42) (nodetype . "Num")))))))
+  context...:
+   /pro/plt/software/racket/5.3/i686/collects/racket/private/map.rkt:21:13: map
+   f1953
+   /pro/plt/software/racket/5.3/i686/collects/racket/private/map.rkt:21:13: map
+   f1953
+   /pro/plt/software/racket/5.3/i686/collects/racket/private/map.rkt:26:19: loop
+   /pro/plt/software/racket/5.3/i686/collects/racket/private/map.rkt:26:19: loop
+   /pro/plt/software/racket/5.3/i686/collects/racket/private/map.rkt:26:19: loop
+   /pro/plt/software/racket/5.3/i686/collects/racket/private/map.rkt:26:19: loop
+   parse-loop1374
+   /pro/plt/software/racket/5.3/i686/collects/racket/cmdline.rkt:470:12: loop
+   /gpfs/main/home/aherlihy/course/cs173/python/Python173/design3/python-main.rkt: [running body]
