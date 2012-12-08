@@ -112,13 +112,7 @@
     [PyDictLoad (dict key) (CDictLoad (desugar-inner dict) (desugar-inner key))]
     [PyDictStore (dict key) (CDictStore (desugar-inner dict) (desugar-inner key))]
     [PyAssign (to from) (CAssign (desugar-inner to) (desugar-inner from))]
-    [PySlice (val upper lower step) 
-             (type-case PyExp val
-               [PyStr (s) (CSlice (desugar-inner val)
-                                  (desugar-inner upper) 
-                                  (if (= (PyNum-n lower) -1) (CNum (string-length s)) (desugar-inner lower))
-                                  (desugar-inner step))]
-               [else (error 'desugar "calling slice on non string type.")])]
+    [PySlice (val lower upper step) (CSlice (desugar-inner val) (desugar-inner lower) (desugar-inner upper) (desugar-inner step))]
     ))
 
 

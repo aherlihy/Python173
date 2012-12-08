@@ -262,10 +262,10 @@ that calls the primitive `print`.
                          (CPrimF 'in))
                  (values "tuple"
                          (CPrimF 'tup))
-                 (values "min"
-                         (CPrimF 'min))
-                 (values "max"
-                         (CPrimF 'max))
+                 (values "min-f"
+                         (CPrimF 'min-f))
+                 (values "max-f"
+                         (CPrimF 'max-f))
                  (values "is"
                          (CPrimF 'is))));(11/15)now basically everything-mult
 
@@ -383,8 +383,8 @@ that calls the primitive `print`.
   (list
    (values 'print (CPrimF 'print))
    (values 'get (CPrimF 'get))
-   (values 'min (CPrimF 'min))
-   (values 'max (CPrimF 'max))
+   (values 'min (CPrimF 'min-f))
+   (values 'max (CPrimF 'max-f))
    (values 'LIST (CPrimF 'list-f))
    (values 'set (CPrimF 'list-f))
    (values 'items (CPrimF 'items))

@@ -22,6 +22,9 @@
 (require (typed-in racket [hash->list : ((hashof 'a 'a) -> (listof (listof 'a)))]))
 (require (typed-in racket [remove-duplicates : ((listof 'a) -> (listof 'a))]))
 (require (typed-in racket [abs : (number -> number)]))
+(require (typed-in racket [string-length : (string -> number)]))
+(require (typed-in racket [min : (number number -> number)]))
+(require (typed-in racket [max : (number number -> number)]))
 (require (typed-in lang/htdp-advanced
                 [string-contains? : (string string -> boolean)]))
 
@@ -355,6 +358,16 @@
 (define (get-str-list str)
   (map VStr (remove* (list "") (regexp-split "(0*)" str))))
 
+(define (get-steps (l : (listof string)) (step : number) (lower : number) (upper : number) (rec : number) (total : string))   
+  (cond
+    [(empty? l)total]
+    [(> rec upper) total]
+    [(< rec lower) (get-steps (rest l) step lower upper (+ rec 1) total)]
+    [(zero? (modulo (+ lower rec ) step))
+     (get-steps (rest l) step lower upper (+ rec 1) (string-append total (first l)))]
+    [else (get-steps (rest l) step lower upper (+ rec 1) total)])
+  )
+
 ;list built-in func
 (define-primf (list-f iter & ret)
    (type-case CVal iter
@@ -591,7 +604,7 @@
     [else (interp-error "unsupported operand for str-gt")]))
 
 ;str max
-(define-primf (max val)
+(define-primf (max-f val)
     (type-case CVal val
       [VStr (s) (m-return 
                  (VStr
@@ -601,7 +614,7 @@
       [else (interp-error "unsupported operand for min/max")]))
 
 ;str min
-(define-primf (min val)
+(define-primf (min-f val)
     (type-case CVal val
       [VStr (s) (m-return 
                  (VStr
@@ -879,8 +892,8 @@
     [(absv) absv]
     [(str) str]
     [(tup) tup]
-    [(min) min]
-    [(max) max]
+    [(min-f) min-f]
+    [(max-f) max-f]
     ))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1094,13 +1107,27 @@
                     [v (m-interp from env)]
                     [newDict (set-box (list (VDictM-b d) (VDict (hash-set (VDict-hashes contents) k v))))])
                    (VNone))]
-    [CSlice (val upper lower slice)
-            (type-case CExp val
-              [CStr (s) (m-return (VStr s))]
-                  ;  (
-                   ;  if (
-                    ;    )]
-              [else (interp-error "nonstring type given to slice - not implemented (handled in desugar)")])]
+;rhis is done in a really silly way.
+    [CSlice (val lower upper step)
+            (m-do ([l (m-interp val env)]
+                   [up (m-interp upper env)]
+                   [low (m-interp lower env)]
+                   [stp (m-interp step env)])
+                  (type-case CVal l
+                    [VStr (s)
+                          (if (< (VNum-n stp) 0)
+                              (VStr (get-steps (reverse (remove* (list "") (regexp-split "(~*)" s))) 
+                                               (abs (VNum-n stp)) 
+                                               (if (or (<= (VNum-n low) 0) (>= (VNum-n low) (string-length s)))
+                                                   0
+                                                   (max 0 (abs (- (VNum-n low) (- (string-length s) 1)))))
+                                               (min (string-length s) (abs (- (VNum-n up)  (- (string-length s) 1)))) 
+                                               0 
+                                               "" ))
+                              (VStr (get-steps (remove* (list "") (regexp-split "(~*)" s))
+                                               (VNum-n stp) (max 0 (VNum-n low)) (min (VNum-n up) (string-length s)) 0 "" )))]
+                    [else (error 'interp "nonstring type given to slice - not implemented")])
+            )]
                    
     ))
 

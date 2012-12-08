@@ -259,14 +259,14 @@ structure that you define in python-syntax.rkt
                                              ;   [(hash-table ('nodetype "Str")
                                              ;                ('s s))
                                              ;    (PyStrLoad (]
-             [(hash-table ('nodetype "Del")) (PyOp (string->symbol "del") (list (get-structured-python dict) (get-structured-python arg)))]
+               [(hash-table ('nodetype "Del")) (PyOp (string->symbol "del") (list (get-structured-python dict) (get-structured-python arg)))]
                [_ (error 'parse (string-append "Haven't nonstore/load thing:\n"
                                 (format "~s" pyjson)))])]
         [(hash-table ('nodetype "Slice")
-                     ('upper upper)
+                     ('upper upper)  
                      ('lower lower)
                      ('step step))
-             (PySlice (get-structured-python dict) (if (equal? upper #\nul) (PyNum 0) (get-structured-python upper)) (if (equal? step #\nul) (PyNum -1) (get-structured-python lower)) (if (equal? step #\nul) (PyNum 1) (get-structured-python step)))]
+             (PySlice (get-structured-python dict) (if (equal? lower #\nul) (PyNum 0) (get-structured-python lower)) (if (equal? upper #\nul) (PyNum 1024) (get-structured-python upper)) (if (equal? step #\nul) (PyNum 1) (get-structured-python step)))]
         [_ (error 'parse (string-append "Haven't handled slicing:\n"
                                 (format "~s" pyjson)))])]
     [(hash-table ('nodetype "Delete")

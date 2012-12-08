@@ -1,3 +1,10 @@
-d ={}
-___assertRaises(TypeError, d.get)
-___assertRaises(TypeError, d.get, None, None, None)
+a = '0123456789'
+print(a[::])
+print(a[::2])
+print(a[1::2])
+print(a[::-1])
+print(a[::-2])
+print(a[3::-2])
+print(a[-100:100:])
+print(a[100:-100:-1])
+print(a[-100:100:2])
