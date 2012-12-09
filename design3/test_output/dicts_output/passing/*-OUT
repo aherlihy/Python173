@@ -1,0 +1,4 @@
+interp: (VStr "Application failed with arity mismatch\nfunction: (VClosure '#hash((values . 8) (list . 44) (abs . 24) (max . 3) (min . 2) (print . 0) (string . 38) (get . 1) (str . 25) (bool . 32) (keys . 10) (dict . 47) (set . 5) (type . 29) (True . 12) (False . 13) (float . 49) (int . 48) (clear . 7) (items . 6) (len . 11) (LIST . 4) (___assertFalse . 17) (___assertTrue . 16) (___assertRaises . 15) (None . 14) (___assertIn . 21) (___assertIs . 20) (___assertNotEqual . 19) (___assertEqual . 18) (tuple . 41) (___assertIsNot . 23) (___assertNotIn . 22) (update . 9)) '(f) (none) (CIf (CApp (CApp (CPrimF 'class-lookup) (list (CId 'f) (CStr \"__bool__\")) (CTuple '())) '() (CTuple '())) (CReturn (CTrue)) (CReturn (CFalse))))\nargs: '()")
+  context...:
+   /pro/plt/software/racket/5.3/i686/collects/racket/cmdline.rkt:470:12: loop
+   /gpfs/main/home/aherlihy/course/cs173/python/Python173/design3/python-main.rkt: [running body]

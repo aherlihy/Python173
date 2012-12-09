@@ -1,0 +1,19 @@
+user break
+  context...:
+   /pro/plt/software/racket/5.3/i686/collects/racket/private/stxcase.rkt:111:7: loop
+   /pro/plt/software/racket/5.3/i686/collects/racket/private/stxcase.rkt:111:7: loop
+   /pro/plt/software/racket/5.3/i686/collects/racket/private/stxcase.rkt:111:7: loop
+   /pro/plt/software/racket/5.3/i686/collects/racket/private/stxcase.rkt:111:7: loop
+   /pro/plt/software/racket/5.3/i686/collects/racket/private/stxcase.rkt:111:7: loop
+   /pro/plt/software/racket/5.3/i686/collects/racket/private/stxcase.rkt:111:7: loop
+   /pro/plt/software/racket/5.3/i686/collects/racket/private/stxcase.rkt:111:7: loop
+   /pro/plt/software/racket/5.3/i686/collects/racket/private/stxcase.rkt:111:7: loop
+   /pro/plt/software/racket/5.3/i686/collects/racket/private/stxcase.rkt:111:7: loop
+   /pro/plt/software/racket/5.3/i686/collects/racket/private/stxcase.rkt:111:7: loop
+   /pro/plt/software/racket/5.3/i686/collects/racket/private/stxcase.rkt:111:7: loop
+   /pro/plt/software/racket/5.3/i686/collects/racket/private/stxcase.rkt:111:7: loop
+   /pro/plt/software/racket/5.3/i686/collects/racket/private/stxcase.rkt:111:7: loop
+   /pro/plt/software/racket/5.3/i686/collects/racket/private/stxcase.rkt:111:7: loop
+   /pro/plt/software/racket/5.3/i686/collects/racket/private/stxcase.rkt:111:7: loop
+   /pro/plt/software/racket/5.3/i686/collects/racket/private/stxcase.rkt:111:7: loop...
+

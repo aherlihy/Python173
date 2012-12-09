@@ -1,42 +1,31 @@
 
+GENERAL
 Figure out scoping
-mutable lists/dicts i.e. figure out store vs environment changes
 Class defs and type comparisions
+
+
 Built in funcs
-functions, i.e. recursive
+    "any.py"  
+    "all.py"  
+    "callable.py"  
+    "len.py"  
+    "filter.py"  
+    "isinstance.py" 
 
-KNOW TO NEED DO
-- bool
-- asserts
+ONE-LAST-TEST
 
-TODO today
-dict
-loops -> if we need to?
-
-BUILTIN
+bool
+    "bool-callable.py"
+    "bool-isinstance.py"  
 
 dicts
-__getitem
+    "dict-getitem.py"  -> ___getitem on dict
 
+exceptions
+    "reraise.py"  -> because our functions need at least 1 arg
+    "invalid-reraise.py" -> "exception as e" and ___fail
 
-ASSERTS
+types
+    "types_truthy2.py"  
+____________________________
 
-done
-assertEqual -> assertNotEqual
-assertIs -> assertIsNot
-assertIn -> assertNotIn
-
-todo
-
-
-assertTrue -> assertFalse
-
-
-
-assertRaises
-___fail
-
-misc
-except RuntimeError as e:
-'in' for strings
-bool cast doesn't work

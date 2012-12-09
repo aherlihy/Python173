@@ -9,7 +9,7 @@ sigquit_handler() {
 trap sigquit_handler SIGQUIT
 
 DIRECTORY=./test_output/$1_output
-FILES=~/python/Python173/design3/python-reference/$1/*
+FILES=~/course/cs173/python/Python173/design3/python-reference/$1/*
 
 if [ ! -d "./test_output" ]; then
     mkdir "./test_output"
@@ -33,9 +33,10 @@ do
 
    if [ -s $DIRECTORY/$FILENAME"-OUT" ]; then
        echo "	failed " $FILENAME
+	gedit $f &
    else
        mv $DIRECTORY/$FILENAME"-OUT" $DIRECTORY/passing/$FILENAME"-OUT"
-       gedit $f &
+       
    fi
 
 echo "Done"
