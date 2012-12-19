@@ -5,6 +5,7 @@
   [CNone]
   [CTrue]
   [CFalse]
+  [CLocals (l : (listof symbol))]
   [CNum (n : number)]
   [CStr (s : string)]
   [CBox (v : CExp)]
@@ -22,21 +23,24 @@
                                            ;; what the values defined
                                            ;; in lib are (basically hack to put all lib functions in scope before callinganything else)
   [CSet! (id : symbol) (value : CExp)]
+  [CMultSet! (id : (listof symbol)) (value : CExp)]
   [CApp (fun : CExp) (args : (listof CExp)) (varargs : CExp)]
   [CFunc (args : (listof symbol)) (vararg : (optionof symbol)) (body : CExp)]
   [CReturn (value : CExp)]
   [CIf (test : CExp) (then : CExp) (else : CExp)]
   [CRaise (type : string) (msg : (listof string))]
   [CTryFinal (try : CExp) (final : CExp)]
-  [CTryExcp (try :  CExp) (name : string) (except : CExp) (e : CExp)]
+  [CTryExcp (try :  CExp) (name : string) (except : CExp) (e : CExp)  (as : symbol)]
   [CList (elts : (listof CExp))]
   [CDict (keys : (listof CExp)) (values : (listof CExp))]
   [CDictM (box : CExp)]
   [CDictLoad (dict : CExp) (key : CExp)]
   [CDictStore (dict : CExp) (key : CExp)]
   [CAssign (to : CExp) (from : CExp)]
-  [CSlice (val : CExp) (upper : CExp) (lower : CExp) (step : CExp)]
-  [CError (val : CExp)])
+  [CSlice (val : CExp) (lower : CExp) (upper : CExp) (step : CExp)]
+  [CError (val : CExp)]
+  [CCmp (iter : CExp) (func : CExp)])
+
 
 (define-type CVal
   [VUndefined];;initial value for variables

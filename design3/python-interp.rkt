@@ -18,12 +18,18 @@
 (require (typed-in racket [hash-values : ((hashof 'a 'b) -> (listof 'b))]))
 (require (typed-in racket [hash-keys : ((hashof 'a 'b) -> (listof 'a))]))
 (require (typed-in racket [string-split : (string -> (listof string))]))
+(require (typed-in racket [substring : (string number number -> string)]))
 (require (typed-in racket [number->string : (number -> string)]))
 (require (typed-in racket [hash->list : ((hashof 'a 'a) -> (listof (listof 'a)))]))
 (require (typed-in racket [remove-duplicates : ((listof 'a) -> (listof 'a))]))
 (require (typed-in racket [abs : (number -> number)]))
+(require (typed-in racket [string-length : (string -> number)]))
+(require (typed-in racket [min : (number number -> number)]))
+(require (typed-in racket [max : (number number -> number)]))
 (require (typed-in lang/htdp-advanced
                 [string-contains? : (string string -> boolean)]))
+(require (typed-in racket/list
+                [range : (number -> (listof number))]))
 
 
 ;;note: interp and primitives need to be mutually recursive -- primops
@@ -45,6 +51,7 @@
 
 (define last_raise (CRaise "RuntimeError" (list "No active exception"))) ; keep track of prev raise for re-raises
 
+
 ;;helper macro for (define-primf)
 (define-syntax prim-bind
   (syntax-rules (&)
@@ -65,9 +72,11 @@
                  (prim-bind (rest val-val) (binds ...) body)
                  (interp-error "primf given wrong argument type")))))]
     [(prim-bind val (bind binds ...) body)
-     (let ([val-val val])
+            (let ([val-val val])
        (if (empty? val-val)
-           (interp-error "primf not given enough arguments")
+           (let ([bind (VNone)])
+             (prim-bind empty (binds ...) body))
+           ;(interp-error "primf not given enough arguments2")
            (let ([bind (first val-val)])
              (prim-bind (rest val-val) (binds ...) body))))]
     [(prim-bind val () body)
@@ -136,15 +145,19 @@
 ;;lookup a value in a prim dict
 (define (prim-dict-lookup (c-dict : CVal) (key : CVal)) : (PM CVal)
   (type-case CVal c-dict
-    [VPrimMap (m)
+    [VPrimMap (m) 
               (type-case (optionof CVal) (hash-ref m key)
                 [some (v) (m-return v)]
                 [none () (interp-error
-                          (string-append "key not found: "
-                                         (to-string key)))])];why would be passed __add__
+                                 (string-append "key not found: "
+                                         (VStr-s key)))])];why would be passed __add__
     [else (interp-error
            (string-append "prim-dict-lookup wants a dict: "
                           (to-string key)))]))
+
+
+  
+
 
 ;;lookup a value in an object (fails if there is no dict)
 (define (local-lookup (obj : CVal) (key : CVal)) : (PM CVal)
@@ -304,7 +317,7 @@
 ;get item from hashmap
 (define-primf (get val & ret);first val is attr, ret is a list of actual args
     (if (empty? ret)
-        (interp-error "typeError")
+        (interp-error "TypeError")
         (m-do ([contents (get-box (list (VDictM-b val)))]
           [(type-case (optionof CVal) (hash-ref (VDict-hashes contents) (first ret))
             [some (v) (m-return v)]
@@ -312,6 +325,13 @@
                        [(equal? 1 (length ret)) (m-return (VNone))]
                        [(equal? 2 (length ret)) (m-return (second ret))]
                        [else (interp-error "TypeError")])])]))))
+
+(define-primf (get-tuple-val val & args)
+  (type-case CVal (first args)
+    [VNum (n) (if (< n (length (VTuple-l val)))
+                  (m-return (list-ref (VTuple-l val) n))
+                  (interp-error "not valid index for tuple"))]
+    [else (interp-error "not valid index for tuple")]))
 
 ;remove item from hashmap
 (define-primf (del dict key);VDict, CVal (key)
@@ -355,14 +375,104 @@
 (define (get-str-list str)
   (map VStr (remove* (list "") (regexp-split "(0*)" str))))
 
+(define (get-steps (l : (listof string)) (step : number) (lower : number) (upper : number) (rec : number) (total : string))   
+  (cond
+    [(empty? l)total]
+    [(> rec upper) total]
+    [(< rec lower) (get-steps (rest l) step lower upper (+ rec 1) total)]
+    [(zero? (modulo (+ lower rec ) step))
+     (get-steps (rest l) step lower upper (+ rec 1) (string-append total (first l)))]
+    [else (get-steps (rest l) step lower upper (+ rec 1) total)])
+  )
+
 ;list built-in func
 (define-primf (list-f iter & ret)
-   (type-case CVal iter
+  (type-case CVal iter
     [VTuple (l) (m-return (VList l))]
     [VList (l) (m-return (VList l))]
     [VStr (s) (m-return (VList (get-str-list s)))]
-    [VNum (n) (m-return (VList empty))]
+    [VNone () (m-return (VList empty))]
     [else (interp-error "argument not iterable")]))
+
+;callable 
+(define-primf (callable call & ret)
+  (type-case CVal call
+    [VClosure (a b c d) (m-return (VBool 1))]
+    [VPrimF (id) (m-return (VBool 1))]
+    [else (m-return (VBool 0))]))
+
+;filter
+(define-primf (Filter func & iter)
+  (type-case CVal func
+    [VNone () (type-case CVal (first iter)
+                [VList (l) (m-return (VList (filter-none l)))]
+                [VTuple (l) (m-return (VTuple (filter-none l)))]
+                [else (interp-error "argument not iterable")])]
+    [VClosure (a b c d) 
+              (type-case CVal (first iter)
+                [VList (l) (m-do ([filters (m-map (lambda (x) (apply-func func (list x) (VTuple empty))) l)]
+                                  ;[error (interp-error "TypeError1")]
+                                  )
+                                        ;(if (= (length l) (length filters)) 
+                                     (VList (filter-list filters l))
+                                     ;(interp-error "TypeError"))
+                                     )]
+                [VTuple (l) (m-do ([filters (m-map (lambda (x) (apply-func func (list x) (VTuple empty))) l)]
+                                  ;[error (interp-error "TypeError1")]
+                                  )
+                                        ;(if (= (length l) (length filters)) 
+                                     (VTuple (filter-list filters l))
+                                     ;(interp-error "TypeError"))
+                                     )]
+                [VStr (s) (m-do ([filters (m-map (lambda (x) (apply-func func (list x) (VTuple empty))) 
+                                                    (map (lambda (x) (VStr x)) (string->list s 0)))]
+                                  ;[error (interp-error "TypeError1")]
+                                  )
+                                        ;(if (= (length l) (length filters)) 
+                                     (VStr (list->string (filter-list filters (string->list s 0))))
+                                     ;(interp-error "TypeError"))
+                                     )]
+               #| [VList (l) (m-do ([filters (m-map (lambda (x) (apply-func func (list x) (VTuple empty))) l)])
+                                 (if (= (length l) (length filters)) 
+                                     (VList (filter-string filters l))
+                                     (interp-error "TypeError")))]|#
+                [else (interp-error "argument not iterable")])]
+    [else (interp-error "nonvalid argument for filter")]))
+
+(define (filter-none l)
+  (foldr (lambda (x build)
+           (type-case CVal x
+             [VNone () build]
+             [VList (elt) (if (empty? elt)
+                              build
+                              (cons x build))]
+             [VStr (s) (if (= 0 (string-length s))
+                              build
+                              (cons x build))]
+             [VNum (n) (if (= 0 n)
+                              build
+                              (cons x build))]
+             [else (cons x build)])) empty l)
+  )
+
+(define (string->list s num)
+  (if (= num (string-length s))
+      empty
+      (cons (substring s num (+ 1 num)) (string->list s (+ 1 num)))))
+
+(define (list->string l)
+  (foldr string-append "" l))
+  
+
+(define (filter-list filters original)
+  (if (empty? original)
+      empty
+      (if (= (VBool-n (first filters)) 1)
+          (cons (first original) (filter-list (rest filters) (rest original)))
+          (filter-list (rest filters) (rest original)))))
+          
+
+                            
 
 ;tuple built-in func
 (define-primf (tup iter & ret)
@@ -370,7 +480,7 @@
     [VTuple (l) (m-return iter)]
     [VList (l) (m-return (VTuple l))]
     [VStr (s) (m-return (VTuple (get-str-list s)))]
-    [VNum (n) (m-return (VTuple empty))]
+    [VNone () (m-return (VTuple empty))]
     [else (interp-error "argument not iterable")]))
 
 ;;checks whether the 2 arguments are equal
@@ -591,7 +701,7 @@
     [else (interp-error "unsupported operand for str-gt")]))
 
 ;str max
-(define-primf (max val)
+(define-primf (max-f val)
     (type-case CVal val
       [VStr (s) (m-return 
                  (VStr
@@ -601,7 +711,7 @@
       [else (interp-error "unsupported operand for min/max")]))
 
 ;str min
-(define-primf (min val)
+(define-primf (min-f val)
     (type-case CVal val
       [VStr (s) (m-return 
                  (VStr
@@ -725,7 +835,45 @@
     [VTuple (l)  (m-return (VNum (length l)))]
     [VList (l) (m-return (VNum (length l)))]
     [VStr (s) (m-return (VNum (length (get-str-list s))))]
+    [VDictM (b) (m-do ([contents (get-box (list b))])
+        (VNum (length (hash-keys (VDict-hashes contents)))))]
     [else (interp-error "undefined operand for len")]))
+
+(define-primf (any (l VList?))
+  (any-help l)
+  )
+
+(define (any-help l)
+   (if (empty? (VList-elts l))
+      (m-return (VBool 0))
+      (type-case CVal (first (VList-elts l))
+        [VNone () (any-help (VList (rest (VList-elts l))))]
+        [VNum (n) (if (= n 0)
+                      (any-help (VList (rest (VList-elts l))))
+                      (m-return (VBool 1)))]
+        [VBool (n) (if (= n 0)
+                      (any-help (VList (rest (VList-elts l))))
+                      (m-return (VBool 1)))]
+        [else (interp-error "bad any argument in list")])))
+
+(define-primf (all (l VList?))
+  (all-help l)
+  )
+
+(define (all-help l)
+   (if (empty? (VList-elts l))
+      (m-return (VBool 1))
+      (type-case CVal (first (VList-elts l))
+        [VNone () (m-return (VBool 0))]
+        [VNum (n) (if (= n 0)
+                      (m-return (VBool 0))
+                      (all-help (VList (rest (VList-elts l))))
+                      )]
+        [VBool (n) (if (= n 0)
+                       (m-return (VBool 0))
+                      (all-help (VList (rest (VList-elts l))))
+                      )]
+        [else (interp-error "bad all argument in list")])))
 
 (define-primf (absv v)
   (type-case CVal v
@@ -736,6 +884,7 @@
 (define-primf (str v)
   (type-case CVal v
     [VBool (n) (if (= 1 n) (m-return (VStr "True")) (m-return (VStr "False")))]
+    [VStr (n) (m-return v)]
     [else (interp-error "undefined operand for str")]))
 
 ;;bitwise list functions
@@ -785,9 +934,6 @@
     [VBool (n) (m-return (VNum (+ 0.0 n)))]
     [else (interp-error "undefined operand for int")]))
 
-;bool cast
-(define-primf (bool val)
-  (m-return (VBool 1)))
 
 ;get hash values
 (define-primf (value (d VDictM?) & ret)
@@ -809,6 +955,10 @@
       (set-box (list (VDictM-b d) (VDict (hash empty))))
       (interp-error "type Error")))
 
+(define-primf (Range (n VNum?) & ret)
+  (m-return (VList (map (lambda (x) (VNum x)) (range (VNum-n n)))))
+  )
+
 ;constucting hash helper
 (define (lists2ltup l1 l2)
   (if (empty? l1)
@@ -821,6 +971,16 @@
             (m-do ([contents (get-box (list (VDictM-b d)))])
                    (VList (lists2ltup (hash-keys (VDict-hashes contents)) (hash-values (VDict-hashes contents)))))
     (interp-error "TypeError")))
+
+(define-primf (dict-length (d VDictM?) & rest)
+  (m-do ([contents (get-box (list (VDictM-b d)))])
+        (VNum (length (hash-keys (VDict-hashes contents))))))
+
+;;CURRENTXX
+#|(define-primf (bool first & ret)
+  (m-do ([tester (class-lookup (list first (VStr "__bool__")))])
+        tester)
+  )|#
  
 
   
@@ -832,7 +992,7 @@
     [(equal) equal]
     [(float) float]
     [(int) int]
-    [(bool) bool]
+    ;[(bool) bool]
     [(int-add) add]
     [(int-sub) sub]
     [(int-neg) neg]
@@ -860,6 +1020,7 @@
     [(tuple-mult) tuple-mult]
     [(tuple-length) tuple-length]
     [(list-length) list-length]
+    [(dict-length) dict-length]
     [(gen-length) gen-length]
     [(list-append) list-append]
     [(list-mult) list-mult]
@@ -871,6 +1032,7 @@
     [(keys) keys]
     [(items) items]
     [(clear) clear]
+    [(range) Range]
     ;[(asser-raises) asser-raises]
     [(in) in]
     [(get) get]
@@ -879,8 +1041,14 @@
     [(absv) absv]
     [(str) str]
     [(tup) tup]
-    [(min) min]
-    [(max) max]
+    [(min-f) min-f]
+    [(max-f) max-f]
+    [(get-tuple-val) get-tuple-val]
+    [(any) any]
+    [(all) all]
+    [(callable) callable]
+    [(filter) Filter]
+    ;[(BOOL) bool]
     ))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -911,12 +1079,15 @@
 
 
 ;;applies funct to args and varargs
-(define (apply-func (func : CVal) (args : (listof CVal)) (varargs : CVal)) : (PM CVal)
+(define (apply-func (func : CVal) (args : (listof CVal)) (varargs : CVal)) : (PM CVal) 
   (let ([args (append args
                       (VTuple-l varargs))])
     (type-case CVal func
       [VClosure
        (c-env off-args off-vararg body)
+       ;(begin (display "function env: \n")
+              ;(map (lambda (x) (display (string-append (symbol->string x) ", "))) (hash-keys c-env))
+              ;(display "\n")
        (let ([named-args (take (length off-args) args)]
              [varargs (drop (length off-args) args)])
          (if (or (< (length args)
@@ -949,6 +1120,30 @@
       [VPrimF (id) ((python-prim id) args)]
       [else (interp-error (string-append "Applied a non-function: "
                                          (to-string func)))])))
+(define (CMultSet-helper ids vals env)
+  (if (= (length ids) (length vals))
+      (if (= 1 (length ids))
+                 (let ((id (first ids))(v (first vals)))
+                   (type-case (optionof Location) (hash-ref env id)
+                     [some (l) (pm-add-store l v)]
+                     [none ()  (pm-catch-error (m-do ([g (get-global (symbol->string id))]
+                                                      [(add-global (symbol->string id) v)]))
+                                               (lambda (x)
+                                                 (interp-error (string-append 
+                                                                "undefined variable " 
+                                                                (symbol->string id)))))]))
+          (m-do
+           ([(let ((id (first ids))(v (first vals)))
+               (type-case (optionof Location) (hash-ref env id)
+                 [some (l) (pm-add-store l v)]
+                 [none ()  (pm-catch-error (m-do ([g (get-global (symbol->string id))]
+                                                  [(add-global (symbol->string id) v)]))
+                                           (lambda (x)
+                                             (interp-error (string-append 
+                                                            "undefined variable " 
+                                                            (symbol->string id)))))]))]
+            [(CMultSet-helper (rest ids) (rest vals) env)])))          
+      (interp-error "Assignment does not have the same number of values as assignees")))
 
 (define (m-interp expr env) : (PM CVal)
   (type-case CExp expr
@@ -994,15 +1189,25 @@
                            (if (VUndefined? v)
                                (interp-error (string-append "local used before it was defined: "
                                                             (to-string x)))
-                               (m-return v)))]))]
-           [none () (interp-error (string-append "Unbound identifier: "
-                                                 (to-string x)))])]
+                                 (m-return v)
+                           ))]))]
+           [none () (get-global (symbol->string x))])]
     [CSet! (id v)
            (m-do ([v (m-interp v env)]
-                  [(type-case (optionof Location) (hash-ref env id)
-                     [some (l) (pm-add-store l v)]
-                     [none () (error 'interp (string-append "variable never bound:"
-                                                            (to-string id)))])]))]
+                  [
+                              (type-case (optionof Location) (hash-ref env id)
+                                [some (l) (pm-add-store l v)]
+                                [none ()  (pm-catch-error (m-do ([g (get-global (symbol->string id))]
+                                                                 [(add-global (symbol->string id) v)]))
+                                                          (lambda (x)
+                                                            (interp-error (string-append 
+                                                                           "undefined variable " 
+                                                                           (symbol->string id))
+                                                                         ; )))]))
+                                                                   )))])]))]
+    [CMultSet! (ids v)
+           (m-do ([v (m-interp v env)]
+                  [(CMultSet-helper ids (VTuple-l v) env)]))]
     [CLet (x bind body)
           (m-do ([val (m-interp bind env)]
                  [loc (add-new-loc val)]
@@ -1022,6 +1227,12 @@
                  [args (m-map (lambda (arg) (m-interp arg env)) args)]
                  [varargs (m-interp varargs env)]
                  [(apply-func func args varargs)]))]
+    [CCmp (iter func)
+          (m-do ([func (m-interp func env)]
+                 [arg (m-interp iter env)]
+                 [test (m-map (lambda (x) (apply-func func (list x) (VTuple empty))) (VList-elts arg))])
+                 (VList test))
+                ]
     [CReturn (v)
              (m-do ([v (m-interp v env)]
                     [(pm-return v)]))]
@@ -1042,12 +1253,14 @@
                         (string-append type " : ") (map (lambda (s) (string-append s ", ")) msg))))
                   (m-interp (CError (CStr pret-args)) env))))
               ]
-    [CTryExcp (try name except e)
+    [CTryExcp (try name except e as)
                 (pm-try-catch (m-interp try env) 
                               (lambda (error) 
-                                   (if (or (string=? (first (string-split (VStr-s error))) name) (string=? name "ExceptAll")) 
-                                       (m-interp except env)
-                                       (m-interp (CRaise (VStr-s error) (list)) env))) ;;(interp-error (VStr-s error)))))
+                                   (if (or (string=? (first (string-split (VStr-s error))) name) (string=? name "ExceptAll")) ; if the exception is to be caught
+                                         (if (string=? "" (symbol->string as)) ;;if there is no "as e"
+                                             (m-interp except env)
+                                             (m-interp (CLet as (CStr (VStr-s error)) except) env))
+                                         (m-interp (CRaise (VStr-s error) (list)) env)))
                               (lambda (x) 
                                (m-interp e env))
                               )]
@@ -1075,6 +1288,14 @@
     [CDictM (b) (m-do
                  ([contents (m-interp b env)])
             (VDictM contents))]
+    [CLocals (l) 
+                   (m-do 
+                    ([vals (m-map (lambda (x) 
+                                    (m-interp (CId x) env))
+                                    l)]
+                     [loc (add-new-loc (VDict 
+                                        (lists2hash (map (lambda (x) (VStr (symbol->string x))) l) vals (hash empty))))])
+                    (VDictM (VBox loc)))]
     [CDictLoad (dict key) 
                (m-do ([d (m-interp dict env)]
                       [contents (get-box (list (VDictM-b d)))]
@@ -1094,13 +1315,27 @@
                     [v (m-interp from env)]
                     [newDict (set-box (list (VDictM-b d) (VDict (hash-set (VDict-hashes contents) k v))))])
                    (VNone))]
-    [CSlice (val upper lower slice)
-            (type-case CExp val
-              [CStr (s) (m-return (VStr s))]
-                  ;  (
-                   ;  if (
-                    ;    )]
-              [else (interp-error "nonstring type given to slice - not implemented (handled in desugar)")])]
+;rhis is done in a really silly way.
+    [CSlice (val lower upper step)
+            (m-do ([l (m-interp val env)]
+                   [up (m-interp upper env)]
+                   [low (m-interp lower env)]
+                   [stp (m-interp step env)])
+                  (type-case CVal l
+                    [VStr (s)
+                          (if (< (VNum-n stp) 0)
+                              (VStr (get-steps (reverse (remove* (list "") (regexp-split "(~*)" s))) 
+                                               (abs (VNum-n stp)) 
+                                               (if (or (<= (VNum-n low) 0) (>= (VNum-n low) (string-length s)))
+                                                   0
+                                                   (max 0 (abs (- (VNum-n low) (- (string-length s) 1)))))
+                                               (min (string-length s) (abs (- (VNum-n up)  (- (string-length s) 1)))) 
+                                               0 
+                                               "" ))
+                              (VStr (get-steps (remove* (list "") (regexp-split "(~*)" s))
+                                               (VNum-n stp) (max 0 (VNum-n low)) (min (VNum-n up) (string-length s)) 0 "" )))]
+                    [else (error 'interp "nonstring type given to slice - not implemented")])
+            )]
                    
     ))
 

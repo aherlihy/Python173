@@ -1,0 +1,7 @@
+get-structured-python.rkt:70:54: read: missing `]' to close `[' on line 65, found instead `)'; indentation suggests a missing `)' before line 66
+  context...:
+   /pro/plt/software/racket/5.3/i686/collects/syntax/module-reader.rkt:176:17: body
+   /pro/plt/software/racket/5.3/i686/collects/syntax/module-reader.rkt:173:2: wrap-internal
+   lang:read-syntax
+   standard-module-name-resolver
+   standard-module-name-resolver

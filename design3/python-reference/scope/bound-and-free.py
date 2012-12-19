@@ -9,3 +9,4 @@ def f(x):
 
 inst = f(3)()
 ___assertEqual(inst.a, inst.m())
+#tests classdefs, accessing fields of classes, returning classes as values...

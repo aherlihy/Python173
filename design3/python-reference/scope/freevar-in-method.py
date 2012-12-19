@@ -10,7 +10,9 @@ def test():
         def str(self):
             return str(self)
     return Test()
-
+#tests accessing class methods from within other class methods, declared both before + after
+#tests overloading lib functions (str) -> fuck
+#returns class instance
 t = test()
 ___assertEqual(t.test(), "var")
 ___assertEqual(t.method_and_var(), "method")

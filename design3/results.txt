@@ -37,8 +37,6 @@
 "test_list_simple.py": true, 
 "except-reraise.py": true, 
 "dict-bool.py": true, 
-"nonlocal-class.py": false, 
-"nesting-through-class.py": false, 
 "dict-items.py": true, 
 "tuple-mul.py": true, 
 "dict-values-set.py": true, 
@@ -51,7 +49,32 @@
 "test_div_zero.py": true
 "tuple-add.py": true, }
 
+<<<<<<< HEAD
 {"test_string_slices.py": false, 
+=======
+
+
+"lambda2.py": false, 
+"test-super.py": false, 
+"nonlocal-function.py": false, 
+"nesting-global-no-free.py": false, 
+"any.py": false, 
+"all.py": false, 
+"extra-nesting.py": false, 
+"dict-getitem.py": false, 
+"nonlocal-method.py": false, 
+"bound-and-free.py": false, 
+"nonlocal-class.py": false, 
+"nesting-through-class.py": false, 
+"test_simple_string_ops.py": false, 
+"simple-and-rebinding.py": false, 
+"tuple-add.py": true, "callable.py": false, 
+"nesting-plus-free-ref-to-global.py": false, 
+"len.py": false, 
+"dict-clear.py": false, 
+"bool-callable.py": false, 
+"test_string_slices.py": false, 
+>>>>>>> 7f4e21d3bc32bc248a079494c8e173dbd2a96233
 "locals-class.py": false, 
 "freevar-in-method.py": false, 
 "lambda4.py": false, 
@@ -68,6 +91,7 @@
 *"test_string_slices.py": false, 
 "bool-isinstance.py": false, 
 "reraise.py": false, 
+<<<<<<< HEAD
 "simple-and-rebinding.py": false, 
 "bool-callable.py": false, 
 "invalid-reraise.py": false, 
@@ -83,3 +107,7 @@
 "bound-and-free.py": false, 
 "all.py": false, 
 *"test_simple_string_ops.py": false, }
+=======
+"invalid-reraise.py": false, 
+"mixed-freevars-and-cellvars.py": false, 
+>>>>>>> 7f4e21d3bc32bc248a079494c8e173dbd2a96233

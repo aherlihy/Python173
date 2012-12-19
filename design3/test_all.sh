@@ -33,9 +33,10 @@ do
 
    if [ -s $DIRECTORY/$FILENAME"-OUT" ]; then
        echo "	failed " $FILENAME
+	gedit $f &
    else
        mv $DIRECTORY/$FILENAME"-OUT" $DIRECTORY/passing/$FILENAME"-OUT"
-       gedit $f &
+       
    fi
 
 echo "Done"

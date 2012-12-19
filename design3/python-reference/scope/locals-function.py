@@ -7,6 +7,7 @@ def f(x):
         return locals()
     return g
 
+
 d = f(2)(4)
 ___assertIn('h', d)
 del d['h']

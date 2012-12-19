@@ -11,9 +11,41 @@ bindings.  For example, this sample library binds `print` to a function
 that calls the primitive `print`.
 
 |#
-(define make-bool
-  (CFunc (list 'f)
+#|(define comprehension
+  (CFunc (list 'x 'l 'f)
          (none)
+         
+         )|#
+(define make-bool
+  (CFunc empty
+         (some 'f)
+         (CIf (CApp (CApp (CPrimF 'class-lookup)
+                          (list (CApp (CApp (CPrimF 'class-lookup)
+                                            (list (CId 'f)
+                                                  (CStr "__len__"))
+                                            (CTuple empty))
+                                      empty
+                                      (CTuple empty))
+                                (CStr "=")) (CTuple empty))
+                    (list (CNum 0))
+                    (CTuple empty))
+              (CReturn (CFalse))
+              (CIf (CApp (CApp (CPrimF 'class-lookup)
+                               (list (CApp (CPrimF 'get-tuple-val)
+                                           (list (CId 'f)
+                                                 (CNum 0))
+                                           (CTuple empty))
+                                     (CStr "__bool__"))
+                               (CTuple empty))
+                         empty
+                         (CTuple empty))
+                   (CReturn (CTrue))
+                   (CReturn (CFalse)))
+              )))
+         
+  
+ #| (CFunc empty
+         (some 'f)
          (CIf (CApp (CApp (CPrimF 'class-lookup)
                           (list (CId 'f)
                                 (CStr "__bool__"))
@@ -22,7 +54,7 @@ that calls the primitive `print`.
                     (CTuple empty))
               (CReturn (CTrue))
               (CReturn (CFalse)))
-              ))
+              ))|#
 
 (define assert-false
   (CFunc (list 'f)
@@ -49,6 +81,11 @@ that calls the primitive `print`.
                     (CTuple empty))
               (CNone)
               (CError (CStr "assertion failed")))))
+
+(define fail
+  (CFunc (list 'f)
+         (none)
+             (CError (CId 'f))))
 
 (define assert-equal
   (CFunc (list 'a 'b)
@@ -262,10 +299,10 @@ that calls the primitive `print`.
                          (CPrimF 'in))
                  (values "tuple"
                          (CPrimF 'tup))
-                 (values "min"
-                         (CPrimF 'min))
-                 (values "max"
-                         (CPrimF 'max))
+                 (values "min-f"
+                         (CPrimF 'min-f))
+                 (values "max-f"
+                         (CPrimF 'max-f))
                  (values "is"
                          (CPrimF 'is))));(11/15)now basically everything-mult
 
@@ -358,6 +395,7 @@ that calls the primitive `print`.
                  (values "in"
                          (CPrimF 'in))
                  ))
+
 (make-type mutable-dict-type
         (list (values "__bool__"
                          (CFunc (list 'this)
@@ -369,7 +407,7 @@ that calls the primitive `print`.
                                     (CReturn (CFalse))
                                      (CReturn (CTrue)))))
                 (values "__len__"
-                         (CPrimF 'list-length))
+                         (CPrimF 'dict-length))
                  (values "="
                          (CPrimF 'equal))
                  (values "in"
@@ -383,8 +421,8 @@ that calls the primitive `print`.
   (list
    (values 'print (CPrimF 'print))
    (values 'get (CPrimF 'get))
-   (values 'min (CPrimF 'min))
-   (values 'max (CPrimF 'max))
+   (values 'min (CPrimF 'min-f))
+   (values 'max (CPrimF 'max-f))
    (values 'LIST (CPrimF 'list-f))
    (values 'set (CPrimF 'list-f))
    (values 'items (CPrimF 'items))
@@ -393,6 +431,11 @@ that calls the primitive `print`.
    (values 'update (CPrimF 'update))
    (values 'keys (CPrimF 'keys))
    (values 'len (CPrimF 'gen-length))
+   (values 'any (CPrimF 'any))
+   (values 'all (CPrimF 'all))
+   (values 'callable (CPrimF 'callable))
+   (values 'filter (CPrimF 'filter))
+   (values 'range (CPrimF 'range))
    (values 'True (CTrue))
    (values 'False (CFalse))
    (values 'None (CNone))
@@ -405,6 +448,8 @@ that calls the primitive `print`.
    (values '___assertIn assert-in)
    (values '___assertNotIn assert-not-in)
    (values '___assertIsNot assert-not-is)
+   (values '___fail fail)
+   ;(values 'any any
    (values 'abs (CPrimF 'absv))
    (values 'str (CPrimF 'str))
    (values 'type class-type)
@@ -417,6 +462,7 @@ that calls the primitive `print`.
    (values 'int (CPrimF 'int))
    (values 'float (CPrimF 'float))
    (values 'BOOL make-bool)
+   ;(values 'BOOL (CPrimF 'bool))
    (values 'tuple (CPrimF 'tup))
    (values 'object obj-type)))
 

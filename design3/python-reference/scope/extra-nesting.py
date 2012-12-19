@@ -10,3 +10,5 @@ plus10 = make_adder2(10)
 
 ___assertEqual(inc(1), 2)
 ___assertEqual(plus10(-2), 8)
+#tests accessing variables declared in higher scopes in a function def
+#tests returning a function as a val

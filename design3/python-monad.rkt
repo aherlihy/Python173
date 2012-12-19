@@ -68,7 +68,7 @@
              [RError (v) ((catch v) n-store)]
              [else (values n-store ret)]))))
 
-(define (pm-try-catch (m : (PM 'f)) (catch : (CVal -> (PM 'f))) (els : (CVal -> (PM 'f)))) : (PM 'f)
+(define (pm-try-catch (m : (PM 'f)) (catch : (CVal -> (PM 'f)))  (els : (CVal -> (PM 'f)))) : (PM 'f)
   (lambda (store)
     (local [(define-values (n-store ret) (m store))]
            (type-case (ROption 'f) ret
@@ -104,8 +104,8 @@
 ;;-2 = globals
 
 (define empty-store
-  (hash (list (values -1 (VNum 0))
-              (values -2 (VPrimMap (hash empty))))))
+  (hash (list (values -1 (VNum 0));;returns number of last item in store
+              (values -2 (VPrimMap (hash empty))))));;globals
 
 (define (pm-lookup-store (l : Location)) : (PM CVal)
   (m-do ([store pm-get-store])
