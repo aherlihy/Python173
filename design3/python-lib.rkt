@@ -444,6 +444,7 @@ that calls the primitive `print`.
 (define lib-binds;put all default vals/keywords
   (list
    (values 'print (CPrimF 'print))
+   (values 'isinstance (CPrimF 'isinstance))
    (values 'get (CPrimF 'get))
    (values 'min (CPrimF 'min-f))
    (values 'max (CPrimF 'max-f))

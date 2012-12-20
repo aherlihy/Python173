@@ -5,7 +5,6 @@
 "callable.py": false, 
 "types_truthy2.py": false
 "isinstance.py": false, 
-"bool-isinstance.py": false,
 "test-super.py": false, 
 "nonlocal-method.py": false, 
 "bound-and-free.py": false

@@ -471,6 +471,23 @@
           (cons (first original) (filter-list (rest filters) (rest original)))
           (filter-list (rest filters) (rest original)))))
           
+(define-primf (isinstance test type)
+  (type-case CVal type
+    [VStr (s) 
+          (type-case CVal test
+            [VObj (dict class)
+                  (m-do [(val (get-box (list class)))]
+                        (if (string=? (VStr-s val) s)
+                            (VBool 1)
+                            (VBool 0)))]
+
+            [VBool (v) 
+                   (if (or (string=? "BOOL" s) (string=? "int" s)) (m-return (VBool 1)) (m-return (VBool 0)))]
+            [VNum  (v) 
+                   (if (string=? "int" s) (m-return (VBool 1)) (m-return (VBool 0)))]
+            [else (interp-error "passing nontype")])]
+    [else (interp-error "passing nonstring type")]))
+    
 
                             
 
@@ -836,7 +853,7 @@
     [VList (l) (m-return (VNum (length l)))]
     [VStr (s) (m-return (VNum (length (get-str-list s))))]
     [VDictM (b) (m-do ([contents (get-box (list b))])
-        (VNum (length (hash-keys (VDict-hashes contents)))))]
+                      (VNum (length (hash-keys (VDict-hashes contents)))))]
     [else (interp-error "undefined operand for len")]))
 
 (define-primf (any (l VList?))
@@ -1056,6 +1073,7 @@
     [(callable) callable]
     [(filter) Filter]
     [(constructor) construct]
+    [(isinstance) isinstance]
     ;[(BOOL) bool]
     ))
 

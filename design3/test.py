@@ -1,5 +1,1 @@
-class A():
-    def g(x):
-        return 'A'
-
-
+instanceof(True, bool)
