@@ -29,11 +29,8 @@ structure that you define in python-syntax.rkt
                          ('ctx c)
                          ('attr func)
                          ('value v)) 
-                    (PyApp (PyId (string->symbol func))
-                           (cons (get-structured-python v) (map get-structured-python args-list))
-                           (if (equal? starargs #\nul)
-                               (PyTuple empty)
-                               (get-structured-python starargs)))]
+                    (PyOp (string->symbol func)
+                           (cons (get-structured-python v) (map get-structured-python args-list)))]
               [(hash-table ('nodetype "Name") ;;if it's an application of an id, whose ctx is a load node
                          ('ctx (hash-table ('nodetype "Load")))
                          ('id "___assertRaises"))
@@ -43,9 +40,8 @@ structure that you define in python-syntax.rkt
                                    ('attr func)
                                    ('value v)) 
                              (PyApp (get-structured-python func-expr)
-                                    (list (PyApp (PyId (string->symbol func))
-                                                 (cons (get-structured-python v) (map get-structured-python (rest (rest args-list))))
-                                                 (PyTuple empty)))
+                                    (list (PyOp (string->symbol func)
+                                                 (cons (get-structured-python v) (map get-structured-python (rest (rest args-list))))))
                                     (if (equal? starargs #\nul)
                                         (PyTuple empty)
                                         (get-structured-python starargs)))]
@@ -132,17 +128,27 @@ structure that you define in python-syntax.rkt
                  ('body body)
                  ('decorator_list dl)
                  ('returns ret))
-           (local [(define-values (va n-args) (get-structured-python args))]
+           (begin (display "in FunctionDef\n")(local [(define-values (va n-args) (get-structured-python args))]
              (PySet! (string->symbol name)
                      (PyFunc va n-args
-                             (PySeq (map get-structured-python body)))))]
-    
+                             (PySeq (map get-structured-python body))))))]
+    [(hash-table ('nodetype "ClassDef")
+                 ('name name)
+                 ('starargs args)
+                 ('body body)
+                 ('decorator_list dl)
+                 ('kwargs k)
+                 ('keywords keys)
+                 ('bases super))
+     (PyClassDef (string->symbol name) (map (lambda (x) (PyId-x (get-structured-python x))) super)
+                 (get-structured-python body))]
     [(hash-table ('nodetype "Lambda")
                  ('args args)
                  ('body body))
-     (local [(define-values (va n-args) (get-structured-python args))]
+     (begin (display "in ClassDef\n")
+            (local [(define-values (va n-args) (get-structured-python args))]
        (PyFunc va n-args
-               (PyReturn (get-structured-python body))))]    
+               (PyReturn (get-structured-python body)))))]    
     [(hash-table ('nodetype "arg")
                  ('arg id)
                  ('annotation an))

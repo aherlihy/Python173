@@ -135,6 +135,11 @@
                                       (CList-elts (desugar-inner iter))))|#
                                               ;;(CApp (CId 'comprehension)(list (desugar-inner id)(desugar-inner iter)(desugar-inner func))(CTuple empty))]
     [PyFunc (args vararg body) (CFunc args vararg (desugar-body body (append args (find-nonlocals body)) (find-func-locals body)))]
+    [PyClassDef (name super body) 
+                (CClassDef name super (desugar-body (if (PySeq? body)
+                                                        (PySeq (append (PySeq-es body) (list (PyReturn (PyApp (PyId 'locals) empty (PyTuple empty))))))
+                                                        (PySeq (cons body (list (PyReturn (PyApp (PyId 'locals) empty (PyTuple empty)))))))
+                                                    (find-nonlocals body) (find-locals body (find-nonlocals body))))]
     ;[PyScopeWrap (x) (desugar-body x empty)]
     [PyReturn (value) (CReturn (desugar-inner value locals))]
     [PyIf (test t e)
@@ -173,9 +178,11 @@
             [(In) (binop "in" (second args) (first args) locals)]
             [(NotIn) (desugar-inner (PyOp 'Not (list (PyOp 'In args))) locals)]
             [(del) (binop "del" (first args) (second args) locals)]
-            [else (CApp (CPrimF id);~why desugar if not add/sub/etc?
-                        (map (lambda (x) (desugar-inner x locals)) args)
-                        (CTuple empty))])]
+            [else (get-and-call (first args) (symbol->string id) (rest args) (PyTuple empty) locals)
+             ;(CApp (CPrimF id);~why desugar if not add/sub/etc?
+                        ;(map (lambda (x) (desugar-inner x locals)) args)
+                        ;(CTuple empty))
+             ])]
     [PyComp (ops l c)
             (if (= 1 (length ops))
                 (desugar-inner (PyOp (first ops) (list l (first c))) locals)

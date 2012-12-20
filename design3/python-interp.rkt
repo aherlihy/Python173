@@ -976,6 +976,13 @@
   (m-do ([contents (get-box (list (VDictM-b d)))])
         (VNum (length (hash-keys (VDict-hashes contents))))))
 
+(define-primf (construct (obj VObj?) & rest)
+  (m-do ([dict (get-box (list (VObj-dict obj)))]
+         [toret (type-case (optionof CVal) (hash-ref (VPrimMap-m dict) (VStr "__init__"))
+                  [some (x) (m-return x)]
+                  [none () (interp-error "Super class no bound")])])
+        toret))
+
 ;;CURRENTXX
 #|(define-primf (bool first & ret)
   (m-do ([tester (class-lookup (list first (VStr "__bool__")))])
@@ -1048,6 +1055,7 @@
     [(all) all]
     [(callable) callable]
     [(filter) Filter]
+    [(constructor) construct]
     ;[(BOOL) bool]
     ))
 
@@ -1194,8 +1202,7 @@
            [none () (get-global (symbol->string x))])]
     [CSet! (id v)
            (m-do ([v (m-interp v env)]
-                  [
-                              (type-case (optionof Location) (hash-ref env id)
+                  [(type-case (optionof Location) (hash-ref env id)
                                 [some (l) (pm-add-store l v)]
                                 [none ()  (pm-catch-error (m-do ([g (get-global (symbol->string id))]
                                                                  [(add-global (symbol->string id) v)]))
@@ -1219,14 +1226,55 @@
     [CSeq (e1 e2)
           (m-do ([(m-interp e1 env)]
                  [(m-interp e2 env)]))]
-
     [CFunc (args vararg body)
            (m-return (VClosure env args vararg body))]
     [CApp (func args varargs)
           (m-do ([func (m-interp func env)]
                  [args (m-map (lambda (arg) (m-interp arg env)) args)]
                  [varargs (m-interp varargs env)]
-                 [(apply-func func args varargs)]))]
+                 [(if (VObj? func)
+                      (apply-func (VPrimF '__call__) (cons func args) varargs)
+                      (apply-func func args varargs))]))]
+    [CClassDef (name super body)
+               (m-do ([new-bod (pm-catch-return (m-do ([(m-interp body
+                                                        env)])
+                                            (VNone))
+                                      m-return)]
+                      [dict (get-box (list (VDictM-b new-bod)))]
+                      [sup (if (empty? super) 
+                               (m-return (VNone))
+                               (type-case (optionof Location) (hash-ref env (first super))
+                                 [some (l)
+                                       (m-do ([store pm-get-store]
+                                              [(let ([v (type-case (optionof CVal) (hash-ref store l)
+                                                          [some (v) v]
+                                                          [none () (error 'interp
+                                                                          (string-append
+                                                                           "can't find loc for var: "
+                                                                           (to-string (first super))))])])
+                                                 (if (VUndefined? v)
+                                                     (interp-error (string-append "local used before it was defined: "
+                                                                                  (to-string (first super))))
+                                                     (m-return v)
+                                                     ))]))]
+                                 [none () (get-global (symbol->string (first super)))]))]
+                      [locforinit (add-new-loc (VPrimMap (VDict-hashes dict)))]
+                      [locforclassname (add-new-loc (VStr (symbol->string (first super))))]
+                      [loc1 (add-new-loc (VPrimMap 
+                                          (if (empty? super)
+                                              (hash-set (VDict-hashes dict) 
+                                                        (VStr "__init__") 
+                                                        (VObj (VBox locforinit) (VBox locforclassname)))
+                                              (hash-set 
+                                               (hash-set (VDict-hashes dict) 
+                                                         (VStr "__init__") 
+                                                         (VObj (VBox locforinit) (VBox locforclassname)))
+                                               (VStr "__super__") 
+                                               sup))))]
+                      [loc2 (add-new-loc (VStr "type"))]
+                      [obj (m-return (VObj (VBox loc1) (VBox loc2)))]
+                      [(add-global (symbol->string name) obj)])
+                      obj)] 
     [CCmp (iter func)
           (m-do ([func (m-interp func env)]
                  [arg (m-interp iter env)]

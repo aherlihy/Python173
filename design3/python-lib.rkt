@@ -176,8 +176,18 @@ that calls the primitive `print`.
          (CApp (CPrimF 'set-box)
                (list (CId 'class-box)
                      (CObj (CId 'class-box)
-                           (CBox (CPrimMap (list)))))
+                           (CBox (CPrimMap 
+                                  (map (lambda (pair)
+                                         (local [(define-values (name val) pair)]
+                                           (values (CStr name) val))) 
+                                       ;;methods for all objects
+                                       (list
+                                        (values "__call__"
+                                                (CPrimF 'constructor)))
+                                       
+                                       )))))
                (CTuple empty)))))
+
 
 (define-syntax-rule (make-type id fs)
   (define id
@@ -397,16 +407,16 @@ that calls the primitive `print`.
                  ))
 
 (make-type mutable-dict-type
-        (list (values "__bool__"
+           (list (values "__bool__"
                          (CFunc (list 'this)
                                 (none)
                                 (CIf (CApp (CPrimF 'equal)
                                            (list (CId 'this)
                                                  (CDictM (CBox (CDict empty empty))))
                                            (CTuple empty))
-                                    (CReturn (CFalse))
+                                     (CReturn (CFalse))
                                      (CReturn (CTrue)))))
-                (values "__len__"
+                 (values "__len__"
                          (CPrimF 'dict-length))
                  (values "="
                          (CPrimF 'equal))
@@ -415,7 +425,21 @@ that calls the primitive `print`.
                  (values "del"
                          (CPrimF 'del))
                  (values "is"
-                         (CPrimF 'is))))  
+                         (CPrimF 'is))
+                 (values "items" 
+                         (CPrimF 'items))
+                 (values "clear" 
+                         (CPrimF 'clear))
+                 (values "values" 
+                         (CPrimF 'value))
+                 (values "update" 
+                         (CPrimF 'update))
+                 (values "keys" 
+                         (CPrimF 'keys))
+                 (values "get" 
+                         (CPrimF 'get))
+                 (values "set" 
+                         (CPrimF 'list-f))))  
 
 (define lib-binds;put all default vals/keywords
   (list

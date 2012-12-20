@@ -27,6 +27,7 @@
   [PySlice (val : PyExp) (lower : PyExp) (upper : PyExp) (step : PyExp)]
   [PyCmp (id : symbol) (iter : PyExp) (func : PyExp)]
   [PyNonLocal (id : symbol)]
+  [PyClassDef (name : symbol) (super : (listof symbol)) (body : PyExp)]
   [PyPass])
 
 (define someF some)

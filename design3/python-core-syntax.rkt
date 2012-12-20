@@ -39,6 +39,7 @@
   [CAssign (to : CExp) (from : CExp)]
   [CSlice (val : CExp) (lower : CExp) (upper : CExp) (step : CExp)]
   [CError (val : CExp)]
+  [CClassDef (name : symbol) (super : (listof symbol)) (body : CExp)]
   [CCmp (iter : CExp) (func : CExp)])
 
 
