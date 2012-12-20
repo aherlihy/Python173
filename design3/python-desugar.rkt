@@ -122,6 +122,13 @@
                (= 1 (length args))
               (any-helper args 0)
               (CError (CStr "TypeError")))]|#
+             [(equal? f (PyId 'isinstance))
+              (if (equal? (length args) 2)
+                  (CApp (desugar-inner f locals)
+                        (list (desugar-inner (first args) locals) (CStr (symbol->string (PyId-x (second args)))))
+                              (desugar-inner varargs locals))
+                  (CError (CStr "TypeError:wrong number of args")))]
+               
            [else (CApp (desugar-inner f locals)
                                   (map (lambda (x) (desugar-inner x locals)) args)
                                   (desugar-inner varargs locals))])
