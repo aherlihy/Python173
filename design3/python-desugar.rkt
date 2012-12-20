@@ -86,9 +86,12 @@
     [PyExcept (type as body) (find-locals body ignorelist)]
     [PyTryFinal (try fin) (append (find-locals try ignorelist)
                                 (find-locals fin ignorelist))]
+    [PyClassDef (name super body) (if (and (not (member name ignorelist)) (not (member name global-ignore))) 
+                           (list name) 
+                           empty)]
     [else empty]))
 
-(define (desugar-inner exp locals)
+(define (desugar-inner exp locals) 
   (type-case PyExp exp
     [PyNum (n) (CNum n)]
     [PyTuple (l) (CTuple (map (lambda (x) (desugar-inner x locals)) l))] ;~recur on each element in the tuple
@@ -178,7 +181,7 @@
             [(In) (binop "in" (second args) (first args) locals)]
             [(NotIn) (desugar-inner (PyOp 'Not (list (PyOp 'In args))) locals)]
             [(del) (binop "del" (first args) (second args) locals)]
-            [else (get-and-call (first args) (symbol->string id) (rest args) (PyTuple empty) locals)
+            [else (get-and-call-obj (first args) (symbol->string id) (rest args) (PyTuple empty) locals)
              ;(CApp (CPrimF id);~why desugar if not add/sub/etc?
                         ;(map (lambda (x) (desugar-inner x locals)) args)
                         ;(CTuple empty))
@@ -203,6 +206,11 @@
     [PyDictStore (dict key) (CDictStore (desugar-inner dict locals) (desugar-inner key locals))]
     [PyAssign (to from) (CAssign (desugar-inner to locals) (desugar-inner from locals))]
     [PySlice (val lower upper step) (CSlice (desugar-inner val locals) (desugar-inner lower locals) (desugar-inner upper locals) (desugar-inner step locals))]
+    [PyFieldLookup (field value) 
+                   (CApp (CPrimF 'object-lookup) 
+                         (list (desugar-inner value locals)
+                               (CStr field))
+                         (CTuple empty))]
     ))
 
 
@@ -219,6 +227,17 @@
                     (CStr name))
               (CTuple empty))
         (map (lambda (x) (desugar-inner x locals)) args)
+        (desugar-inner vararg locals)))
+
+(define (get-and-call-obj inner name args vararg locals);~what does this do?
+  (CApp (CApp (CPrimF 'object-lookup) ;example of instantiating/lookup of an object -> 
+                                     ;    type of inner CApp is 'class_lookup', so applies function class lookup
+                                     ;    name of param is 'name' passed into func (to be applied correctly, corresponding param needs to come from caller)
+                                     ;    pass list of 
+              (list (desugar-inner inner locals)
+                    (CStr name))
+              (CTuple empty))
+         (map (lambda (x) (desugar-inner x locals)) args)
         (desugar-inner vararg locals)))
 
 (define (binop name left right locals)

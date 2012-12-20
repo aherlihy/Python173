@@ -4,8 +4,7 @@ def make_adder5(x):
             return x + y
     return Adder()
 
-inc = make_adder5(1)
+a = make_adder5(1)
 plus10 = make_adder5(10)
-
-___assertEqual(inc(1), 2)
+___assertEqual(a(1), 2) #passing self into --call--?
 ___assertEqual(plus10(-2), 8)

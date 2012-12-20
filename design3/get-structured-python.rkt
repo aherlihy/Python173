@@ -121,17 +121,15 @@ structure that you define in python-syntax.rkt
                    (if (equal? va #\nul)
                        (noneF)
                        (someF (string->symbol va))))]
-    
     [(hash-table ('nodetype "FunctionDef")
                  ('name name)
                  ('args args)
                  ('body body)
                  ('decorator_list dl)
-                 ('returns ret))
-           (begin (display "in FunctionDef\n")(local [(define-values (va n-args) (get-structured-python args))]
+                 ('returns ret))(local [(define-values (va n-args) (get-structured-python args))]
              (PySet! (string->symbol name)
                      (PyFunc va n-args
-                             (PySeq (map get-structured-python body))))))]
+                             (PySeq (map get-structured-python body)))))]
     [(hash-table ('nodetype "ClassDef")
                  ('name name)
                  ('starargs args)
@@ -139,16 +137,15 @@ structure that you define in python-syntax.rkt
                  ('decorator_list dl)
                  ('kwargs k)
                  ('keywords keys)
-                 ('bases super))
-     (PyClassDef (string->symbol name) (map (lambda (x) (PyId-x (get-structured-python x))) super)
-                 (get-structured-python body))]
+                 ('bases super))     
+            (PyClassDef (string->symbol name) (map (lambda (x) (PyId-x (get-structured-python x))) super)
+                 (PySeq (map get-structured-python body)))]
     [(hash-table ('nodetype "Lambda")
                  ('args args)
                  ('body body))
-     (begin (display "in ClassDef\n")
             (local [(define-values (va n-args) (get-structured-python args))]
        (PyFunc va n-args
-               (PyReturn (get-structured-python body)))))]    
+               (PyReturn (get-structured-python body))))]    
     [(hash-table ('nodetype "arg")
                  ('arg id)
                  ('annotation an))
@@ -328,6 +325,12 @@ structure that you define in python-syntax.rkt
     [(hash-table ('nodetype "Nonlocal")
                  ('names names))
      (PyNonLocal (string->symbol (first names)))]
+    [(hash-table ('nodetype "Attribute")
+                 ('ctx c)
+                 ('attr func)
+                 ('value v))
+     (PyFieldLookup func 
+           (get-structured-python v))]
     [_ (error 'parse (string-append "Haven't handled a case yet:\n"
                                     (format "~s" pyjson)))]))
 

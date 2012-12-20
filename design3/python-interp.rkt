@@ -124,6 +124,7 @@
 
 ;;get the super class of the class c (c's class must be type)
 (define (super (c : CVal)) : (PM CVal)
+  ;(begin (display "in super\n") 
   (m-do ([c-c (class (list c))]
          [class-type (get-global "class-type")]
          [(if (eq? c-c class-type)
@@ -359,6 +360,10 @@
                   (type-case (optionof CVal) (hash-ref (VDict-hashes contents) val)
                     [some (v) (VBool 1)]
                     [none () (VBool 0)]))]
+    [VPrimMap (map)
+                 (m-return  (type-case (optionof CVal) (hash-ref map val)
+                    [some (v) (VBool 1)]
+                    [none () (VBool 0)]))]
     [VStr (s) (if (string-contains? (VStr-s val) s) (m-return (VBool 1)) (m-return (VBool 0)))]
     [VList (l) (if (member val l) (m-return (VBool 1)) (m-return (VBool 0)))]
     [else (interp-error "in needs to take iterable")]))
@@ -391,6 +396,8 @@
     [VTuple (l) (m-return (VList l))]
     [VList (l) (m-return (VList l))]
     [VStr (s) (m-return (VList (get-str-list s)))]
+    [VDictM (b) (m-do ([contents (get-box (list b))])
+                       (VList (hash-keys (VDict-hashes contents))))]
     [VNone () (m-return (VList empty))]
     [else (interp-error "argument not iterable")]))
 
@@ -399,6 +406,12 @@
   (type-case CVal call
     [VClosure (a b c d) (m-return (VBool 1))]
     [VPrimF (id) (m-return (VBool 1))]
+    [VObj (dict c) 
+          (m-do ([c-c (class (list call))]
+                 [class-type (get-global "class-type")])
+                 (if (eq? c-c class-type)
+                                (VBool 1)
+                                (VBool 0)))]
     [else (m-return (VBool 0))]))
 
 ;filter
@@ -1023,6 +1036,7 @@
     [(set-box) set-box]
     [(class-has-member?) class-has-member?]
     [(class-lookup) class-lookup]
+    [(object-lookup) obj-lookup]
     [(tuple-append) tuple-append]
     [(tuple-mult) tuple-mult]
     [(tuple-length) tuple-length]
@@ -1102,11 +1116,13 @@
                     (length off-args))
                  (and (not (empty? varargs))
                       (none? off-vararg)))
-             (interp-error
+             (begin (display "args length:")(display (number->string (length args)))(display "\n")
+                    (map pretty args)(display "\n")(display "\n")
+                    (interp-error
               (string-append "Application failed with arity mismatch\nfunction: "
                              (string-append (to-string func)
                                             (string-append "\nargs: "
-                                                           (to-string args)))))
+                                                           (to-string args))))))
              (m-do ([new-env
                      (m-foldl
                       (lambda (pair env)
@@ -1125,7 +1141,10 @@
                                                         new-env)])
                                             (VNone))
                                       m-return)]))))]
-      [VPrimF (id) ((python-prim id) args)]
+      [VPrimF (id) ;(begin (display "VPrimf:\n")
+                          ;(display (symbol->string id))
+                          ;(display "\n")
+                     ((python-prim id) args)]
       [else (interp-error (string-append "Applied a non-function: "
                                          (to-string func)))])))
 (define (CMultSet-helper ids vals env)
@@ -1232,8 +1251,9 @@
           (m-do ([func (m-interp func env)]
                  [args (m-map (lambda (arg) (m-interp arg env)) args)]
                  [varargs (m-interp varargs env)]
+                 [class-lu (if (VObj? func) (class-lookup (list func (VStr "__call__"))) (m-return (VNone)))]
                  [(if (VObj? func)
-                      (apply-func (VPrimF '__call__) (cons func args) varargs)
+                      (apply-func class-lu args varargs)
                       (apply-func func args varargs))]))]
     [CClassDef (name super body)
                (m-do ([new-bod (pm-catch-return (m-do ([(m-interp body
@@ -1258,22 +1278,35 @@
                                                      (m-return v)
                                                      ))]))]
                                  [none () (get-global (symbol->string (first super)))]))]
-                      [locforinit (add-new-loc (VPrimMap (VDict-hashes dict)))]
-                      [locforclassname (add-new-loc (VStr (symbol->string (first super))))]
+                      [locforinit (add-new-loc (VPrimMap (hash empty)))]
+                      [locforclassname (add-new-loc (VStr "REPLACE ME")
+                                                           ;(if (empty? super) 'NoSuper (first super))
+                                                           )]
+                      [classtype (m-return (VBox locforclassname))]
                       [loc1 (add-new-loc (VPrimMap 
                                           (if (empty? super)
                                               (hash-set (VDict-hashes dict) 
                                                         (VStr "__init__") 
-                                                        (VObj (VBox locforinit) (VBox locforclassname)))
+                                                        (VObj (VBox locforinit) classtype))
                                               (hash-set 
                                                (hash-set (VDict-hashes dict) 
                                                          (VStr "__init__") 
-                                                         (VObj (VBox locforinit) (VBox locforclassname)))
+                                                         (VObj (VBox locforinit) classtype))
                                                (VStr "__super__") 
                                                sup))))]
-                      [loc2 (add-new-loc (VStr "type"))]
+                      [class-type (get-global "class-type")]
+                      [loc2 (add-new-loc class-type)]
                       [obj (m-return (VObj (VBox loc1) (VBox loc2)))]
-                      [(add-global (symbol->string name) obj)])
+                      [(set-box (list classtype obj))]
+                      [(m-do ([(type-case (optionof Location) (hash-ref env name)
+                                 [some (l) (pm-add-store l obj)]
+                                 [none ()  (pm-catch-error (m-do ([g (get-global (symbol->string name))]
+                                                                  [(add-global (symbol->string name) obj)]))
+                                                           (lambda (x)
+                                                             (interp-error (string-append 
+                                                                            "undefined variable " 
+                                                                            (symbol->string name))
+                                                                           )))])]))])
                       obj)] 
     [CCmp (iter func)
           (m-do ([func (m-interp func env)]
@@ -1339,7 +1372,8 @@
     [CLocals (l) 
                    (m-do 
                     ([vals (m-map (lambda (x) 
-                                    (m-interp (CId x) env))
+                                    (pm-catch-error (m-interp (CId x) env)
+                                                     (lambda (x) (m-return (VNone)))))
                                     l)]
                      [loc (add-new-loc (VDict 
                                         (lists2hash (map (lambda (x) (VStr (symbol->string x))) l) vals (hash empty))))])
@@ -1388,11 +1422,13 @@
     ))
 
 (define (interp expr)
-  (local [(define-values (store res)
+  (begin 
+    (set! last_raise (CRaise "RuntimeError" (list "No active exception")))
+    (local [(define-values (store res)
             ((m-interp expr (hash (list)))
              empty-store))]
          (type-case (ROption CVal) res
            [RValue (v) v]
            [RReturn (v) (error 'interp "returned when not in function context")]
-           [RError (v) (error 'interp (to-string v))])))
+           [RError (v) (error 'interp (to-string v))]))))
 

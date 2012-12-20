@@ -175,17 +175,17 @@ that calls the primitive `print`.
    (CLet 'class-box (CBox (CUndefined))
          (CApp (CPrimF 'set-box)
                (list (CId 'class-box)
-                     (CObj (CId 'class-box)
-                           (CBox (CPrimMap 
-                                  (map (lambda (pair)
-                                         (local [(define-values (name val) pair)]
-                                           (values (CStr name) val))) 
-                                       ;;methods for all objects
-                                       (list
-                                        (values "__call__"
-                                                (CPrimF 'constructor)))
-                                       
-                                       )))))
+                     (CObj 
+                      (CBox (CPrimMap 
+                             (map (lambda (pair)
+                                    (local [(define-values (name val) pair)]
+                                      (values (CStr name) val))) 
+                                  ;;methods for all objects
+                                  (list
+                                   (values "__call__"
+                                           (CPrimF 'constructor)))
+                                  )))
+                      (CId 'class-box)))
                (CTuple empty)))))
 
 
