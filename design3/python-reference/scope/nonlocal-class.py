@@ -8,5 +8,4 @@ def f(x):
 
 c = f(0)
 ___assertEqual(c.get(), 1)
-#print(c.__class__.__dict__)
 ___assertNotIn("x", c.__class__.__dict__)

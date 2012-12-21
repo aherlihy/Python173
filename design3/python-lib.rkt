@@ -159,7 +159,7 @@ that calls the primitive `print`.
    'partial-apply
    (CFunc (list 'func)
           (some 'args)
-          (CReturn
+                 (CReturn
            (CFunc empty
                   (some 'more-args)
                   (CReturn

@@ -50,7 +50,8 @@
 
 
 (define last_raise (CRaise "RuntimeError" (list "No active exception"))) ; keep track of prev raise for re-raises
-
+(define inClass false)
+(define preClassEnv (hash empty))
 
 ;;helper macro for (define-primf)
 (define-syntax prim-bind
@@ -287,7 +288,7 @@
 
 ;;gets a particular global from the global varaible dict
 (define (get-global (arg : string))
-  (m-do ([d get-globals]
+         (m-do ([d get-globals]
          [(prim-dict-lookup d (VStr arg))])))
 
 ;;adds a global variable and its value to the global variable dict
@@ -489,16 +490,14 @@
     [VStr (s) 
           (type-case CVal test
             [VObj (dict class)
-                  (m-do [(val (get-box (list class)))]
-                        (if (string=? (VStr-s val) s)
-                            (VBool 1)
-                            (VBool 0)))]
+                  (m-do ([inList (class-lookup (list test (VStr "__instance__")))]
+                         [(in (list inList type))]))]
 
             [VBool (v) 
                    (if (or (string=? "BOOL" s) (string=? "int" s)) (m-return (VBool 1)) (m-return (VBool 0)))]
             [VNum  (v) 
                    (if (string=? "int" s) (m-return (VBool 1)) (m-return (VBool 0)))]
-            [else (interp-error "passing nontype")])]
+            [else (m-return (VBool 0))])]
     [else (interp-error "passing nonstring type")]))
     
 
@@ -1134,13 +1133,12 @@
                     (length off-args))
                  (and (not (empty? varargs))
                       (none? off-vararg)))
-             (begin (display "args length:")(display (number->string (length args)))(display "\n")
-                    (map pretty args)(display "\n")(display "\n")
-                    (interp-error
+             
+             (interp-error
               (string-append "Application failed with arity mismatch\nfunction: "
                              (string-append (to-string func)
                                             (string-append "\nargs: "
-                                                           (to-string args))))))
+                                                           (to-string args)))))
              (m-do ([new-env
                      (m-foldl
                       (lambda (pair env)
@@ -1240,15 +1238,15 @@
     [CSet! (id v)
            (m-do ([v (m-interp v env)]
                   [(type-case (optionof Location) (hash-ref env id)
-                                [some (l) (pm-add-store l v)]
-                                [none ()  (pm-catch-error (m-do ([g (get-global (symbol->string id))]
-                                                                 [(add-global (symbol->string id) v)]))
-                                                          (lambda (x)
-                                                            (interp-error (string-append 
-                                                                           "undefined variable " 
-                                                                           (symbol->string id))
-                                                                         ; )))]))
-                                                                   )))])]))]
+                     [some (l) (pm-add-store l v)]
+                     [none ()  (pm-catch-error (m-do ([g (get-global (symbol->string id))]
+                                                      [(add-global (symbol->string id) v)]))
+                           (lambda (x)
+                             (interp-error (string-append 
+                                            "undefined variable " 
+                                            (symbol->string id))
+                                           ; )))]))
+                                           )))])]))]
     [CMultSet! (ids v)
            (m-do ([v (m-interp v env)]
                   [(CMultSet-helper ids (VTuple-l v) env)]))]
@@ -1264,7 +1262,9 @@
           (m-do ([(m-interp e1 env)]
                  [(m-interp e2 env)]))]
     [CFunc (args vararg body)
-           (m-return (VClosure env args vararg body))]
+           (if (and inClass (and (not (empty? args))(not (eq? 'func (first args)))))
+               (m-return (VClosure preClassEnv args vararg body))
+               (m-return (VClosure env args vararg body)))]
     [CApp (func args varargs)
           (m-do ([func (m-interp func env)]
                  [args (m-map (lambda (arg) (m-interp arg env)) args)]
@@ -1274,11 +1274,13 @@
                       (apply-func class-lu args varargs)
                       (apply-func func args varargs))]))]
     [CClassDef (name super body)
-               (m-do ([new-bod (pm-catch-return (m-do ([(m-interp body
-                                                        env)])
-                                            (VNone))
-                                      m-return)]
-                      [dict (get-box (list (VDictM-b new-bod)))]
+               (m-do ([new-bod (begin (set! inClass true) 
+                                      (set! preClassEnv env)
+                                      (pm-catch-return (m-do ([(m-interp body
+                                                                         env)])
+                                                             (VNone))
+                                                       m-return))]
+                      [dict (begin (set! inClass false)(get-box (list (VDictM-b new-bod))))]
                       [sup (if (empty? super) 
                                (m-return (VNone))
                                (type-case (optionof Location) (hash-ref env (first super))
@@ -1303,22 +1305,32 @@
                       [classtype (m-return (VBox locforclassname))]
                       [loc1 (add-new-loc (VPrimMap 
                                           (if (empty? super)
-                                              (hash-set (VDict-hashes dict) 
-                                                        (VStr "__init__") 
-                                                        (VObj (VBox locforinit) classtype))
-                                              (hash-set 
+                                              (hash-set
                                                (hash-set (VDict-hashes dict) 
                                                          (VStr "__init__") 
                                                          (VObj (VBox locforinit) classtype))
-                                               (VStr "__super__") 
-                                               sup))))]
+                                               (VStr "__instance__")
+                                               (VList (list (VStr (symbol->string name)))))
+                                              (hash-set
+                                               (hash-set 
+                                                (hash-set (VDict-hashes dict) 
+                                                          (VStr "__init__") 
+                                                          (VObj (VBox locforinit) classtype))
+                                                (VStr "__super__") 
+                                                sup)
+                                               (VStr "__instance__")
+                                               (VList (list
+                                                       (VStr (symbol->string name))
+                                                       (VStr (symbol->string (first super)))))))))]
                       [class-type (get-global "class-type")]
                       [loc2 (add-new-loc class-type)]
                       [obj (m-return (VObj (VBox loc1) (VBox loc2)))]
                       [(set-box (list classtype obj))]
                       [(m-do ([(type-case (optionof Location) (hash-ref env name)
                                  [some (l) (pm-add-store l obj)]
-                                 [none ()  (pm-catch-error (m-do ([g (get-global (symbol->string name))]
+                                 [none ()  
+                           (pm-catch-error (m-do ([g 
+                           (get-global (symbol->string name))]
                                                                   [(add-global (symbol->string name) obj)]))
                                                            (lambda (x)
                                                              (interp-error (string-append 
@@ -1442,6 +1454,8 @@
 (define (interp expr)
   (begin 
     (set! last_raise (CRaise "RuntimeError" (list "No active exception")))
+    (set! inClass false)
+    (set! preClassEnv (hash empty))
     (local [(define-values (store res)
             ((m-interp expr (hash (list)))
              empty-store))]
